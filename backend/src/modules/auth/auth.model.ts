@@ -1,12 +1,16 @@
-import { Schema, model, Types } from "mongoose";
+import { Schema, model, Types, Document } from "mongoose";
 
-interface AuthSchemaType {
+export interface AuthSchemaType {
     userId: Types.ObjectId;
     email?: string;
     password: string;
+    resetPasswordToken?: string;
+    resetPasswordTokenExpiresAt?: Date;
     createdAt: Date;
     updatedAt: Date;
 }
+
+export type AuthDocument = AuthSchemaType & Document;
 
 const authSchema = new Schema<AuthSchemaType>({
     email: {
@@ -25,8 +29,18 @@ const authSchema = new Schema<AuthSchemaType>({
     password: {
         type: String,
         required: true
+    },
+
+    resetPasswordToken: {
+        type: String,
+    },
+
+    resetPasswordTokenExpiresAt: {
+        type: Date,
     }
 
 }, { timestamps: true });
+
+authSchema.index({userId: 1, email: 1}, {unique: true});
 
 export const Auth = model<AuthSchemaType>("Auth", authSchema);

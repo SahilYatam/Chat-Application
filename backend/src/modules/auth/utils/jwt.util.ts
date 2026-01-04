@@ -1,5 +1,6 @@
 import jwt, {SignOptions} from "jsonwebtoken";
 import { generateToken } from "./encryptToken.util.js";
+import { Types } from "mongoose";
 
 interface JwtPayload {
     userId: string;
@@ -21,7 +22,11 @@ export const generateAccessAndRefreshToken = (userId: string): AuthTokens => {
     const accessToken = jwt.sign(
         {userId} as JwtPayload,
         secret,
-        {expiresIn: ACCESS_TOKEN_EXPIRY} as SignOptions
+        {
+            expiresIn: ACCESS_TOKEN_EXPIRY,
+            issuer: "chat-app",
+            audience: "user",
+        }
     );
     const refreshToken = generateToken();
 
