@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+temp/
+
+# Environment varibales
+.env
+
+.env*
+
+!.env*.example
+
+dist/
+logs/
+*.log
+.DS_Store
