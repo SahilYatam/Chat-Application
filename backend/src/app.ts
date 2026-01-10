@@ -8,6 +8,7 @@ import cors from "cors";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
+import { errorHandler, notFoundHandler } from "./middlewares/globalErrorHandler.js";
 
 export const app = express();
 
@@ -44,4 +45,7 @@ function limiter (windowMs: number, max: number) {
 
 const globalRateLimiting = limiter(15 * 60 * 1000, 1000); // 15 minutes, 1000 requests
 app.use(globalRateLimiting);
+
+app.use(notFoundHandler);
+app.use(errorHandler);
 

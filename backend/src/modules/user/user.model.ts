@@ -1,13 +1,20 @@
-import { Schema, model, Types } from "mongoose";
+import { Schema, model, Types, Document } from "mongoose";
 
-interface UserSchemaType {
+export enum Gender {
+  MALE = "male",
+  FEMALE = "female",
+}
+
+export interface UserSchemaType {
     username: string;
     name: string;
+    gender: Gender;
     avatar: string,
-    friends: Types.ObjectId[];
     createdAt: Date;
     updatedAt: Date;
 }
+
+export type UserDocument = UserSchemaType & Document;
 
 const userSchema = new Schema<UserSchemaType>({
     username: {
@@ -21,17 +28,18 @@ const userSchema = new Schema<UserSchemaType>({
         required: true
     },
 
+    gender: {
+        type: String,
+        enum: Object.values(Gender),
+        required: true
+    },
+
     avatar: {
         type: String,
     },
 
-    friends: [
-        {
-            type: Schema.Types.ObjectId,
-            ref: "User"
-        },
-    ]
-
 }, {timestamps: true});
+
+userSchema.index({username: 1}, {unique: true});
 
 export const User = model<UserSchemaType>("User", userSchema)
