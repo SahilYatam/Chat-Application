@@ -5,13 +5,13 @@ import { friendRequestService } from "./friendRequest.service.js";
 import { Types } from "mongoose";
 
 const sendFriendRequest = asyncHandler(async (req: Request, res: Response) => {
-    const senderId = req.user?._id;
+    const senderId = req.user._id;
     const { receiverId } = friendRequestSchema.sendFriendRequestSchema.parse(
-        req.params.id
+        req.params
     );
 
     await friendRequestService.sendFriendRequest(
-        new Types.ObjectId(senderId),
+        senderId,
         new Types.ObjectId(receiverId)
     );
 
@@ -22,14 +22,14 @@ const sendFriendRequest = asyncHandler(async (req: Request, res: Response) => {
 
 const acceptFriendRequest = asyncHandler(
     async (req: Request, res: Response) => {
-        const currentUserId = req.user?._id;
+        const currentUserId = req.user._id;
         const { requestId } = friendRequestSchema.acceptFriendRequestSchema.parse(
-            req.params.id
+            req.params
         );
 
         await friendRequestService.acceptFriendRequest(
             new Types.ObjectId(requestId),
-            new Types.ObjectId(currentUserId)
+            currentUserId
         );
 
         return res
@@ -40,14 +40,14 @@ const acceptFriendRequest = asyncHandler(
 
 const rejectFriendRequest = asyncHandler(
     async (req: Request, res: Response) => {
-        const currentUserId = req.user?._id;
+        const currentUserId = req.user._id;
         const { requestId } = friendRequestSchema.rejectFriendRequestSchema.parse(
-            req.params.id
+            req.params
         );
 
         await friendRequestService.rejectFriendRequest(
             new Types.ObjectId(requestId),
-            new Types.ObjectId(currentUserId)
+            currentUserId
         );
 
         return res

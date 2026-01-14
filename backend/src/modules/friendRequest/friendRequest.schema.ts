@@ -1,9 +1,6 @@
 import { z } from "zod";
-import { FriendRequestStatus } from "./friendRequest.model.js";
 
-export const objectIdSchema = z
-  .string()
-  .regex(/^[0-9a-fA-F]{24}$/, "Invalid MongoDB ObjectId");
+import { objectIdSchema } from "../../shared/index.js";
 
 
 const sendFriendRequestSchema = z.object({

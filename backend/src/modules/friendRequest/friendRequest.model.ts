@@ -1,4 +1,4 @@
-import { Schema, model, Types, Document } from "mongoose";
+import { Schema, model, Types, HydratedDocument } from "mongoose";
 
 export enum FriendRequestStatus {
   PENDING = "pending",
@@ -6,7 +6,7 @@ export enum FriendRequestStatus {
   REJECTED = "rejected",
 }
 
-interface FriendRequestSchemaType {
+export interface FriendRequestSchemaType {
     senderId: Types.ObjectId;
     receiverId: Types.ObjectId;
     status: FriendRequestStatus;
@@ -14,7 +14,7 @@ interface FriendRequestSchemaType {
     updatedAt: Date;
 }
 
-export type FriendRequestDocument = FriendRequestSchemaType & Document
+export type FriendRequestDocument = HydratedDocument<FriendRequestSchemaType>
 
 const friendRequestSchema = new Schema<FriendRequestSchemaType>(
     {

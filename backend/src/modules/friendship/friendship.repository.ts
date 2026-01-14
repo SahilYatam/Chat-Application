@@ -1,13 +1,12 @@
 import { ClientSession, Types } from "mongoose";
 import {
     Friendship,
-    FriendshipDocument,
+    FriendshipSchemaType,
     FriendshipStatus,
+    FriendshipDocument
 } from "./friendship.model.js";
+import { normalizeObjectId } from "../../shared/index.js";
 
-const normalized = (id: string | Types.ObjectId): Types.ObjectId => {
-    return typeof id === "string" ? new Types.ObjectId(id) : id;
-};
 
 type CreateFriendshipInput = {
     userA: Types.ObjectId;
@@ -24,22 +23,22 @@ const createFriendship = async (
     return friendship;
 };
 
-const findBetweenUsers = async (
-    userA: string | Types.ObjectId,
-    userB: string | Types.ObjectId
-): Promise<FriendshipDocument | null> => {
-    const a = normalized(userA);
-    const b = normalized(userB);
+const findFriendshipBetweenUsers = async (
+    userA: Types.ObjectId,
+    userB: Types.ObjectId
+): Promise<FriendshipSchemaType | null> => {
+    const a = normalizeObjectId(userA);
+    const b = normalizeObjectId(userB);
 
     return Friendship.findOne({
         $or: [
             { userA: a, userB: b },
             { userA: b, userB: a },
         ],
-    });
+    }).lean<FriendshipSchemaType>();
 };
 
 export const friendshipRepo = {
     createFriendship,
-    findBetweenUsers,
+    findFriendshipBetweenUsers,
 };

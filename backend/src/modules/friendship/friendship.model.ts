@@ -1,4 +1,4 @@
-import { Schema, model, Types, Document } from "mongoose";
+import { Schema, model, Types, HydratedDocument } from "mongoose";
 
 export enum FriendshipStatus {
     ACTIVE = "active",
@@ -15,7 +15,7 @@ export interface FriendshipSchemaType {
     updatedAt: Date;
 }
 
-export type FriendshipDocument = FriendshipSchemaType & Document;
+export type FriendshipDocument = HydratedDocument<FriendshipSchemaType>;
 
 const friendshipSchema = new Schema<FriendshipSchemaType>(
     {

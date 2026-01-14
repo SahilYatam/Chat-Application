@@ -1,44 +1,42 @@
 import { ClientSession, Types } from "mongoose";
 import {
     FriendRequest,
-    FriendRequestDocument,
+    FriendRequestSchemaType,
     FriendRequestStatus,
+    FriendRequestDocument
 } from "./friendRequest.model.js";
+import { normalizeObjectId } from "../../shared/index.js";
 
 type FriendRequestUserField = "senderId" | "receiverId";
-
-const normalized = (id: string | Types.ObjectId): Types.ObjectId => {
-    return typeof id === "string" ? new Types.ObjectId(id) : id;
-};
 
 const findByUserField = async (
     field: FriendRequestUserField,
     userId: string | Types.ObjectId
-): Promise<FriendRequestDocument | null> => {
-    const id = normalized(userId);
-    return FriendRequest.findOne({ [field]: id });
+): Promise<FriendRequestSchemaType | null> => {
+    const id = normalizeObjectId(userId);
+    return FriendRequest.findOne({ [field]: id }).lean<FriendRequestSchemaType>();
 };
 
 const findById = async (
     requestId: Types.ObjectId
-): Promise<FriendRequestDocument | null> => {
-    const id = normalized(requestId);
-    return FriendRequest.findById(id);
+): Promise<FriendRequestSchemaType | null> => {
+    const id = normalizeObjectId(requestId);
+    return FriendRequest.findById(id).lean<FriendRequestSchemaType>();
 };
 
 const findBetweenUsers = async (
     userA: string | Types.ObjectId,
     userB: string | Types.ObjectId
-): Promise<FriendRequestDocument | null> => {
-    const a = normalized(userA);
-    const b = normalized(userB);
+): Promise<FriendRequestSchemaType | null> => {
+    const a = normalizeObjectId(userA);
+    const b = normalizeObjectId(userB);
 
     return FriendRequest.findOne({
         $or: [
             { senderId: a, receiverId: b },
             { senderId: b, receiverId: a },
         ],
-    });
+    }).lean<FriendRequestSchemaType>();
 };
 
 const createFriendRequest = async (
@@ -46,8 +44,8 @@ const createFriendRequest = async (
     receiverId: string | Types.ObjectId
 ): Promise<FriendRequestDocument> => {
     return FriendRequest.create({
-        senderId: normalized(senderId),
-        receiverId: normalized(receiverId),
+        senderId: normalizeObjectId(senderId),
+        receiverId: normalizeObjectId(receiverId),
     });
 };
 

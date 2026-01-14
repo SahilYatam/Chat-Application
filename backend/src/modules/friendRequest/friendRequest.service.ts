@@ -77,7 +77,7 @@ const acceptFriendRequest = async (
     const { userA, userB } = normalizeUsers(request.senderId, request.receiverId);
 
     // Check if friendship already exists
-    const existingFriendship = await friendshipRepo.findBetweenUsers(
+    const existingFriendship = await friendshipRepo.findFriendshipBetweenUsers(
         userA,
         userB
     );
@@ -145,7 +145,7 @@ const rejectFriendRequest = async(
     const {userA, userB} = normalizeUsers(request.senderId, request.receiverId);
 
 
-    const existingFriendship = await friendshipRepo.findBetweenUsers(userA, userB);
+    const existingFriendship = await friendshipRepo.findFriendshipBetweenUsers(userA, userB);
     if (existingFriendship) throw new ApiError(409, "Friendship already exists");
 
     await friendRequestRepo.updateRequestStatus(requestId, FriendRequestStatus.REJECTED);
