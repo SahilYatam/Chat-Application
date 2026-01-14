@@ -1,4 +1,4 @@
-import { Schema, model, Types } from "mongoose";
+import { Schema, model, Types, HydratedDocument } from "mongoose";
 
 export enum MessageType {
   TEXT = "text",
@@ -6,15 +6,19 @@ export enum MessageType {
   IMAGE = "image",
 }
 
-interface ChatSchemaType {
+export interface ChatSchemaType {
     conversationId: Types.ObjectId;
     senderId: Types.ObjectId;
     message: string;
-    messageType: MessageType;
-    read: boolean;
+    messageType?: MessageType;
+    editedAt?: Date,
+    read?: boolean;
+    isDeleted?: boolean;
     createdAt: Date;
     updatedAt: Date;
 }
+
+export type ChatDocument = HydratedDocument<ChatSchemaType>;
 
 const chatSchema = new Schema <ChatSchemaType>({
     conversationId: {
@@ -41,7 +45,17 @@ const chatSchema = new Schema <ChatSchemaType>({
         default: MessageType.TEXT
     },
 
+    editedAt: {
+        type: Date,
+        default: Date.now
+    },
+
     read: {
+        type: Boolean,
+        default: false
+    },
+
+    isDeleted: {
         type: Boolean,
         default: false
     }

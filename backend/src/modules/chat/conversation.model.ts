@@ -1,10 +1,12 @@
-import { Schema, model, Types } from "mongoose";
+import { Schema, model, Types, HydratedDocument } from "mongoose";
 
-interface ConversationSchemaType {
+export interface ConversationSchemaType {
     participants: Types.ObjectId[],
     createdAt: Date;
     updatedAt: Date;
 }
+
+export type ConversationDocument = HydratedDocument<ConversationSchemaType>
 
 const conversationSchema = new Schema <ConversationSchemaType>({
     participants: [
@@ -15,11 +17,6 @@ const conversationSchema = new Schema <ConversationSchemaType>({
         }
     ]
 }, {timestamps: true});
-
-/**
- * Prevent duplicate 1-to-1 conversations
- * (same two users)
- */
 
 conversationSchema.index(
     {participants: 1},
