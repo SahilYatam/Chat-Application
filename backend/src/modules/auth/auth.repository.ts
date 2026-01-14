@@ -1,7 +1,6 @@
 import { Types } from "mongoose";
-import { Auth, AuthDocument } from "./auth.model.js";
-import { Session, SessionDocument } from "./session.model.js";
-
+import { Auth, AuthSchemaType, AuthDocument } from "./auth.model.js";
+import { Session, SessionDocument, SessionSchemaType } from "./session.model.js";
 
 // =============== AUTH REPO FUNCTIONS ===============
 
@@ -12,8 +11,7 @@ type CreateAuthInput = {
 };
 
 const createAuth = async (input: CreateAuthInput): Promise<AuthDocument> => {
-    const authUser = await Auth.create(input);
-    return authUser;
+    return await Auth.create(input);
 };
 
 type AuthUpdate = Partial<{
@@ -23,36 +21,40 @@ type AuthUpdate = Partial<{
 }>;
 
 type UpdateAuthInput = {
-    id: Types.ObjectId, 
-    updates: AuthUpdate
-}
+    id: Types.ObjectId;
+    updates: AuthUpdate;
+};
 
-const updateAuthById = async(
+const updateAuthById = async (
     input: UpdateAuthInput
 ): Promise<AuthDocument | null> => {
     const updatedAuth = await Auth.findByIdAndUpdate(
-        input.id, 
-        {$set: input.updates},
-        {new: true}
+        input.id,
+        { $set: input.updates },
+        { new: true }
     );
     return updatedAuth;
-}
+};
 
 const findUserById = async (
     id: string | Types.ObjectId
-): Promise<AuthDocument | null> => {
-    const authUser = await Auth.findById(id);
-    return authUser;
+): Promise<AuthSchemaType | null> => {
+    return await Auth.findById(id).lean<AuthSchemaType>();
 };
 
-const findUserByEmail = async (email: string): Promise<AuthDocument | null> => {
-    const authUser = await Auth.findOne({ email });
-    return authUser;
+const findUserByEmail = async (
+    email: string
+): Promise<AuthSchemaType | null> => {
+    return await Auth.findOne({ email }).lean<AuthSchemaType>();
 };
 
-const findHashedResetPasswordToken = async(hashedToken: string): Promise<AuthDocument | null> => {
-    return await Auth.findOne({resetPasswordToken: hashedToken})
-}
+const findHashedResetPasswordToken = async (
+    hashedToken: string
+): Promise<AuthSchemaType | null> => {
+    return await Auth.findOne({
+        resetPasswordToken: hashedToken,
+    }).lean<AuthSchemaType>();
+};
 
 export const authRepo = {
     createAuth,
@@ -62,16 +64,14 @@ export const authRepo = {
     findUserByEmail,
 };
 
-
 // =============== SESSION REPO FUNCTIONS ===============
-
 
 type CreateSessionInput = {
     userId: Types.ObjectId;
     refreshToken: string;
     expiresAt: Date;
-    isActive: boolean,
-    lastActivity: Date,
+    isActive: boolean;
+    lastActivity: Date;
 };
 
 const createSession = async (
@@ -83,13 +83,14 @@ const createSession = async (
 
 type UpdateSessionInput = {
     id: Types.ObjectId;
-    updates: Partial<SessionDocument>;
+    updates: Partial<SessionSchemaType>;
 };
 
 const updateSessionById = async (
     input: UpdateSessionInput
 ): Promise<SessionDocument | null> => {
-    const updatedSession = await Session.findByIdAndUpdate(input.id,
+    const updatedSession = await Session.findByIdAndUpdate(
+        input.id,
         { $set: input.updates },
         { new: true }
     );
@@ -97,35 +98,39 @@ const updateSessionById = async (
 };
 
 const deleteSessionByHashedToken = async (hashedToken: string) => {
-    return await Session.findOneAndDelete({refreshToken: hashedToken})
-}
+    return await Session.findOneAndDelete({ refreshToken: hashedToken });
+};
 
 const deleteExpiredSessions = async () => {
     let batchSize = 100;
     let totalDeleted = 0;
 
-    while(true){
+    while (true) {
         const expired = await Session.find(
-            {refreshTokenExpiresAt: {$lt: new Date()}},
-            {_id: 1}
-        ).limit(batchSize).lean();
+            { refreshTokenExpiresAt: { $lt: new Date() } },
+            { _id: 1 }
+        )
+            .limit(batchSize)
+            .lean();
 
-        if(expired.length === 0) break;
+        if (expired.length === 0) break;
 
-        const ids = expired.map(s => s._id);
+        const ids = expired.map((s) => s._id);
 
-        const {deletedCount} = await Session.deleteMany({_id: {$in: ids}});
+        const { deletedCount } = await Session.deleteMany({ _id: { $in: ids } });
 
         totalDeleted += deletedCount;
 
-        await new Promise(res => setTimeout(res, 100));
+        await new Promise((res) => setTimeout(res, 100));
     }
     return totalDeleted;
-}
+};
 
-const findSession = async(refreshToken: string): Promise<SessionDocument | null> => {
-    return await Session.findOne({refreshToken})
-}
+const findSession = async (
+    refreshToken: string
+): Promise<SessionSchemaType | null> => {
+    return await Session.findOne({ refreshToken }).lean<SessionSchemaType>();
+};
 
 export const sessionRepo = {
     createSession,
@@ -133,4 +138,4 @@ export const sessionRepo = {
     findSession,
     deleteExpiredSessions,
     deleteSessionByHashedToken,
-}
+};
