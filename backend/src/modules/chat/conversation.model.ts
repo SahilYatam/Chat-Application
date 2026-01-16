@@ -1,7 +1,7 @@
 import { Schema, model, Types, HydratedDocument } from "mongoose";
 
 export interface ConversationSchemaType {
-    participants: Types.ObjectId[],
+    participants: Types.ObjectId[];
     createdAt: Date;
     updatedAt: Date;
 }

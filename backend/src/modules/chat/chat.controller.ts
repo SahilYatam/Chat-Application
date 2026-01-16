@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { asyncHandler, ApiResponse } from "../../shared/index.js";
 import { chatService } from "./chat.service.js";
 import { chatSchema } from "./chat.schema.js";
+import { normalizeObjectId } from "../../shared/index.js";
 
 const sendMessage = asyncHandler(async (req: Request, res: Response) => {
     const senderId = req.user._id;
@@ -22,9 +23,10 @@ const markMessagesAsRead = asyncHandler(async (req: Request, res: Response) => {
     const { conversationId } = chatSchema.markMessagesAsReadSchema.parse(
         req.params
     );
+    const converId = normalizeObjectId(conversationId)
 
     const result = await chatService.markMessagesAsRead(
-        conversationId,
+        converId,
         currentUserId
     );
 
