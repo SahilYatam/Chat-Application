@@ -1,4 +1,4 @@
-import { Schema, model, Types, Document } from "mongoose";
+import { Schema, model, Types, HydratedDocument } from "mongoose";
 
 export enum Gender {
   MALE = "male",
@@ -14,7 +14,8 @@ export interface UserSchemaType {
     updatedAt: Date;
 }
 
-export type UserDocument = UserSchemaType & Document;
+export type UserDocument =
+  HydratedDocument<UserSchemaType>;
 
 const userSchema = new Schema<UserSchemaType>({
     username: {
