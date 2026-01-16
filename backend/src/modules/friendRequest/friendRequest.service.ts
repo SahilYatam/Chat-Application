@@ -5,6 +5,8 @@ import { friendRequestRepo } from "./friendRequest.repository.js";
 import { userRepo } from "../user/user.repository.js";
 import { friendshipRepo } from "../friendship/friendship.repository.js";
 import { FriendshipStatus } from "../friendship/friendship.model.js";
+import { NotificationType } from "../notification/notification.model.js";
+import { notificationService } from "../notification/notification.service.js";
 
 import mongoose from "mongoose";
 
@@ -46,7 +48,17 @@ const sendFriendRequest = async (
         }
     }
 
-    await friendRequestRepo.createFriendRequest(senderId, receiverId);
+    const friendRequest = await friendRequestRepo.createFriendRequest(
+        senderId,
+        receiverId
+    );
+
+    await notificationService.createAndDispatch({
+        receiverId,
+        senderId,
+        entityId: friendRequest._id,
+        type: NotificationType.FRIEND_REQUEST_RECEIVED,
+    });
 };
 
 const acceptFriendRequest = async (
@@ -94,7 +106,7 @@ const acceptFriendRequest = async (
                 userA,
                 userB,
                 createdBy: currentUserId,
-                status: FriendshipStatus.ACTIVE
+                status: FriendshipStatus.ACTIVE,
             },
             session
         );
@@ -109,23 +121,33 @@ const acceptFriendRequest = async (
     } catch (err: unknown) {
         const error = err as Error;
         await session.abortTransaction();
-        logger.error("Error while accepting friend request", error.message, error.stack);
+        logger.error(
+            "Error while accepting friend request",
+            error.message,
+            error.stack
+        );
         throw error;
     } finally {
         session.endSession();
     }
-    
+
+    await notificationService.createAndDispatch({
+        receiverId: request.senderId,
+        senderId: currentUserId,
+        entityId: requestId,
+        type: NotificationType.FRIEND_REQUEST_ACCEPTED,
+    });
 };
 
-const rejectFriendRequest = async(
+const rejectFriendRequest = async (
     requestId: Types.ObjectId,
     currentUserId: Types.ObjectId
 ): Promise<void> => {
     const request = await friendRequestRepo.findById(requestId);
-    if(!request) throw new ApiError(404, "Friend request not found");
+    if (!request) throw new ApiError(404, "Friend request not found");
 
     // Authorization
-    if(!request.receiverId.equals(currentUserId)){
+    if (!request.receiverId.equals(currentUserId)) {
         throw new ApiError(
             403,
             "You are not allowed to reject this friend request"
@@ -142,17 +164,29 @@ const rejectFriendRequest = async(
         }
     }
 
-    const {userA, userB} = normalizeUsers(request.senderId, request.receiverId);
+    const { userA, userB } = normalizeUsers(request.senderId, request.receiverId);
 
-
-    const existingFriendship = await friendshipRepo.findFriendshipBetweenUsers(userA, userB);
+    const existingFriendship = await friendshipRepo.findFriendshipBetweenUsers(
+        userA,
+        userB
+    );
     if (existingFriendship) throw new ApiError(409, "Friendship already exists");
 
-    await friendRequestRepo.updateRequestStatus(requestId, FriendRequestStatus.REJECTED);
-}
+    await friendRequestRepo.updateRequestStatus(
+        requestId,
+        FriendRequestStatus.REJECTED
+    );
+
+    await notificationService.createAndDispatch({
+        receiverId: request.senderId,
+        senderId: currentUserId,
+        entityId: requestId,
+        type: NotificationType.FRIEND_REQUEST_REJECTED,
+    });
+};
 
 export const friendRequestService = {
     sendFriendRequest,
     acceptFriendRequest,
-    rejectFriendRequest
-}
+    rejectFriendRequest,
+};

@@ -3,49 +3,57 @@ import {
     FriendRequest,
     FriendRequestSchemaType,
     FriendRequestStatus,
-    FriendRequestDocument
+    FriendRequestDocument,
 } from "./friendRequest.model.js";
 import { normalizeObjectId } from "../../shared/index.js";
+
+type FriendRequestLean = FriendRequestSchemaType & {
+    _id: Types.ObjectId;
+};
+
+export type FriendRequestEntity = {
+    id: Types.ObjectId;
+    senderId: Types.ObjectId;
+    receiverId: Types.ObjectId;
+    status: FriendRequestStatus;
+    createdAt: Date;
+    updatedAt: Date;
+};
 
 type FriendRequestUserField = "senderId" | "receiverId";
 
 const findByUserField = async (
     field: FriendRequestUserField,
-    userId: string | Types.ObjectId
-): Promise<FriendRequestSchemaType | null> => {
-    const id = normalizeObjectId(userId);
-    return FriendRequest.findOne({ [field]: id }).lean<FriendRequestSchemaType>();
+    userId: Types.ObjectId
+): Promise<FriendRequestLean | null> => {
+    return FriendRequest.findOne({ [field]: userId }).lean<FriendRequestLean>();
 };
 
 const findById = async (
     requestId: Types.ObjectId
-): Promise<FriendRequestSchemaType | null> => {
-    const id = normalizeObjectId(requestId);
-    return FriendRequest.findById(id).lean<FriendRequestSchemaType>();
+): Promise<FriendRequestLean | null> => {
+    return FriendRequest.findById(requestId).lean<FriendRequestLean>();
 };
 
 const findBetweenUsers = async (
-    userA: string | Types.ObjectId,
-    userB: string | Types.ObjectId
-): Promise<FriendRequestSchemaType | null> => {
-    const a = normalizeObjectId(userA);
-    const b = normalizeObjectId(userB);
-
+    userA: Types.ObjectId,
+    userB: Types.ObjectId
+): Promise<FriendRequestLean | null> => {
     return FriendRequest.findOne({
         $or: [
-            { senderId: a, receiverId: b },
-            { senderId: b, receiverId: a },
+            { senderId: userA, receiverId: userB },
+            { senderId: userB, receiverId: userA },
         ],
-    }).lean<FriendRequestSchemaType>();
+    }).lean<FriendRequestLean>();
 };
 
 const createFriendRequest = async (
-    senderId: string | Types.ObjectId,
-    receiverId: string | Types.ObjectId
+    senderId: Types.ObjectId,
+    receiverId: Types.ObjectId
 ): Promise<FriendRequestDocument> => {
     return FriendRequest.create({
-        senderId: normalizeObjectId(senderId),
-        receiverId: normalizeObjectId(receiverId),
+        senderId,
+        receiverId,
     });
 };
 
