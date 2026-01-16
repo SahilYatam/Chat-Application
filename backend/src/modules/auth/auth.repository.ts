@@ -1,8 +1,15 @@
 import { Types } from "mongoose";
 import { Auth, AuthSchemaType, AuthDocument } from "./auth.model.js";
-import { Session, SessionDocument, SessionSchemaType } from "./session.model.js";
+import {
+    Session,
+    SessionDocument,
+    SessionSchemaType,
+} from "./session.model.js";
 
 // =============== AUTH REPO FUNCTIONS ===============
+type AuthLean = AuthSchemaType & {
+    _id: Types.ObjectId;
+};
 
 type CreateAuthInput = {
     userId: Types.ObjectId;
@@ -38,14 +45,12 @@ const updateAuthById = async (
 
 const findUserById = async (
     id: string | Types.ObjectId
-): Promise<AuthSchemaType | null> => {
-    return await Auth.findById(id).lean<AuthSchemaType>();
+): Promise<AuthLean | null> => {
+    return await Auth.findById(id).lean<AuthLean>();
 };
 
-const findUserByEmail = async (
-    email: string
-): Promise<AuthSchemaType | null> => {
-    return await Auth.findOne({ email }).lean<AuthSchemaType>();
+const findUserByEmail = async (email: string): Promise<AuthLean | null> => {
+    return await Auth.findOne({ email }).lean<AuthLean>();
 };
 
 const findHashedResetPasswordToken = async (
@@ -66,6 +71,10 @@ export const authRepo = {
 
 // =============== SESSION REPO FUNCTIONS ===============
 
+type SessionLean = SessionSchemaType & {
+    _id: Types.ObjectId;
+};
+
 type CreateSessionInput = {
     userId: Types.ObjectId;
     refreshToken: string;
@@ -76,7 +85,7 @@ type CreateSessionInput = {
 
 const createSession = async (
     input: CreateSessionInput
-): Promise<SessionDocument | null> => {
+): Promise<SessionDocument> => {
     const session = await Session.create(input);
     return session;
 };
@@ -97,7 +106,9 @@ const updateSessionById = async (
     return updatedSession;
 };
 
-const deleteSessionByHashedToken = async (hashedToken: string) => {
+const deleteSessionByHashedToken = async (
+    hashedToken: string
+): Promise<SessionDocument | null> => {
     return await Session.findOneAndDelete({ refreshToken: hashedToken });
 };
 
@@ -111,7 +122,7 @@ const deleteExpiredSessions = async () => {
             { _id: 1 }
         )
             .limit(batchSize)
-            .lean();
+            .lean<Pick<SessionLean, "_id">[]>();
 
         if (expired.length === 0) break;
 
@@ -128,8 +139,8 @@ const deleteExpiredSessions = async () => {
 
 const findSession = async (
     refreshToken: string
-): Promise<SessionSchemaType | null> => {
-    return await Session.findOne({ refreshToken }).lean<SessionSchemaType>();
+): Promise<SessionLean | null> => {
+    return await Session.findOne({ refreshToken }).lean<SessionLean>();
 };
 
 export const sessionRepo = {
