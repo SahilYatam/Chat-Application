@@ -8,6 +8,21 @@ import {
 import { normalizeObjectId } from "../../shared/index.js";
 
 
+type FriendshipLean = FriendshipSchemaType & {
+  _id: Types.ObjectId;
+};
+
+export type FriendshipEntity = {
+  id: Types.ObjectId;
+  userA: Types.ObjectId;
+  userB: Types.ObjectId;
+  createdBy: Types.ObjectId;
+  status: FriendshipStatus;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+
 type CreateFriendshipInput = {
     userA: Types.ObjectId;
     userB: Types.ObjectId;
@@ -26,7 +41,7 @@ const createFriendship = async (
 const findFriendshipBetweenUsers = async (
     userA: Types.ObjectId,
     userB: Types.ObjectId
-): Promise<FriendshipSchemaType | null> => {
+): Promise<FriendshipLean | null> => {
     const a = normalizeObjectId(userA);
     const b = normalizeObjectId(userB);
 
@@ -35,7 +50,7 @@ const findFriendshipBetweenUsers = async (
             { userA: a, userB: b },
             { userA: b, userB: a },
         ],
-    }).lean<FriendshipSchemaType>();
+    }).lean<FriendshipLean>();
 };
 
 export const friendshipRepo = {
