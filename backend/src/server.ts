@@ -1,22 +1,22 @@
-import { app } from "./app.js";
 import { logger } from "./shared/index.js";
 import { connectDB } from "./config/db.js";
 import mongoose from "mongoose";
-import { Server } from "http";
+import {server} from "./socket/socket.js"
 
-let httpServer: Server | null = null;
+let httpServer = server;
+
 let isShuttingDown = false;
 
 const PORT = Number(process.env.PORT) || 8000;
 const SHUTDOWN_TIMEOUT = 10000;
 
-const server = async (): Promise<void> => {
+const startServer = async (): Promise<void> => {
     try {
         await connectDB();
 
-        httpServer = app.listen(PORT, () => {
+        httpServer.listen(PORT, () => {
             logger.info(`🚀 Server running on PORT: ${PORT}`);
-        });
+        })
     } catch (error: unknown) {
         if (error instanceof Error) {
             logger.error(`Failed to start server: ${error.message}`, {
@@ -98,4 +98,4 @@ const gracefulShutdown = async (signal: string): Promise<void> => {
     }
 
 };
-server();
+startServer();
