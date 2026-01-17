@@ -6,8 +6,10 @@ import { comparePassword, hashPassword } from "./utils/password.util.js";
 import { Gender } from "../user/user.model.js";
 import { generateToken, hashToken } from "./utils/encryptToken.util.js";
 import { logger } from "../../shared/index.js";
-import { sendPasswordResetEmail, sendUsernameRecoveryEmail } from "../../shared/email/email.service.js";
-
+import {
+    sendPasswordResetEmail,
+    sendUsernameRecoveryEmail,
+} from "../../shared/email/email.service.js";
 
 const singup = async (data: SignupInput): Promise<UserPublicData> => {
     const existingUser = await userRepo.findUserByUsername(data.username);
@@ -50,9 +52,9 @@ const login = async (data: LoginInput): Promise<UserPublicData> => {
         throw new ApiError(404, "User not found");
     }
 
-    const authUser = await authRepo.findUserById(user._id)
+    const authUser = await authRepo.findUserById(user._id);
     if (!authUser) {
-        throw new ApiError(404, "Auth record not found for user")
+        throw new ApiError(404, "Auth record not found for user");
     }
 
     const isCorrect = await comparePassword(data.password, authUser.password);
@@ -65,12 +67,12 @@ const login = async (data: LoginInput): Promise<UserPublicData> => {
         username: user.username,
         name: user.name,
         avatar: user.avatar,
-    }
+    };
 };
 
 const logout = async (refreshToken: string) => {
-    const token = hashToken(refreshToken)
-    const session = await sessionRepo.deleteSessionByHashedToken(token)
+    const token = hashToken(refreshToken);
+    const session = await sessionRepo.deleteSessionByHashedToken(token);
 
     if (!session) throw new ApiError(403, "Unauthorized request");
 
@@ -95,28 +97,31 @@ const forgotPasswordRequest = async (email: string): Promise<void> => {
     const authUser = await authRepo.findUserByEmail(email);
     if (!authUser) return;
 
-    const rawToken = generateToken()
+    const rawToken = generateToken();
     const resetPasswordTokenExipresAt = new Date(Date.now() + 10 * 60 * 1000);
 
     const hashedToken = hashToken(rawToken);
 
     authUser.resetPasswordToken = hashedToken;
-    authUser.resetPasswordTokenExpiresAt = resetPasswordTokenExipresAt
-
-    await authUser.save();
+    authUser.resetPasswordTokenExpiresAt = resetPasswordTokenExipresAt;
 
     const resetLink = `${process.env.CLIENT_URL}/forget-password/${rawToken}`;
 
     await sendPasswordResetEmail(email, resetLink);
 };
 
-const resetPassword = async (token: string, password: string): Promise<void> => {
+const resetPassword = async (
+    token: string,
+    password: string,
+): Promise<void> => {
     const hashedToken = hashToken(token);
 
     const user = await authRepo.findHashedResetPasswordToken(hashedToken);
     if (
-        !user || !user.resetPasswordTokenExpiresAt ||
-        user.resetPasswordTokenExpiresAt < new Date()) {
+        !user ||
+        !user.resetPasswordTokenExpiresAt ||
+        user.resetPasswordTokenExpiresAt < new Date()
+    ) {
         throw new ApiError(403, "Invalid or expired reset token");
     }
 
@@ -127,9 +132,9 @@ const resetPassword = async (token: string, password: string): Promise<void> => 
             password: newHashedPassword,
             resetPasswordToken: null,
             resetPasswordTokenExpiresAt: null,
-        }
+        },
     });
-}
+};
 
 export const authService = {
     singup,
@@ -137,5 +142,5 @@ export const authService = {
     logout,
     recoverUsername,
     forgotPasswordRequest,
-    resetPassword
-}
+    resetPassword,
+};

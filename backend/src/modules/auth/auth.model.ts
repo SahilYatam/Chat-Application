@@ -1,4 +1,4 @@
-import { Schema, model, Types, Document } from "mongoose";
+import { Schema, model, Types, HydratedDocument } from "mongoose";
 
 export interface AuthSchemaType {
     userId: Types.ObjectId;
@@ -10,7 +10,7 @@ export interface AuthSchemaType {
     updatedAt: Date;
 }
 
-export type AuthDocument = AuthSchemaType & Document;
+export type AuthDocument = HydratedDocument<AuthSchemaType>;
 
 const authSchema = new Schema<AuthSchemaType>({
     email: {

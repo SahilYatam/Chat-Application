@@ -55,10 +55,10 @@ const findUserByEmail = async (email: string): Promise<AuthLean | null> => {
 
 const findHashedResetPasswordToken = async (
     hashedToken: string
-): Promise<AuthSchemaType | null> => {
+): Promise<AuthLean | null> => {
     return await Auth.findOne({
         resetPasswordToken: hashedToken,
-    }).lean<AuthSchemaType>();
+    }).lean<AuthLean>();
 };
 
 export const authRepo = {
