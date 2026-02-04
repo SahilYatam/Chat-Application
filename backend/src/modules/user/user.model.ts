@@ -21,7 +21,7 @@ const userSchema = new Schema<UserSchemaType>({
     username: {
         type: String,
         required: true,
-        unique: true
+        trim: true
     },
 
     name: {

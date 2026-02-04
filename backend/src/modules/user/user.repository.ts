@@ -1,7 +1,8 @@
 import { Types } from "mongoose";
 import { User, Gender, UserDocument, UserSchemaType } from "./user.model.js";
+import { SidePanelUser } from "./user.types.js";
 
-type UserLean = UserSchemaType & {
+export type UserLean = UserSchemaType & {
     _id: Types.ObjectId;
 };
 
@@ -13,44 +14,70 @@ type CreateUserInput = {
 };
 
 const createUser = async (input: CreateUserInput): Promise<UserDocument> => {
-    const user = await User.create(input);
-    return user;
+    return User.create(input);
 };
 
-const findUserById = async (
-    id: Types.ObjectId | string
-): Promise<UserLean | null> => {
-    return await User.findById(id).lean<UserLean>();
+const findUserById = async (id: Types.ObjectId): Promise<UserLean | null> => {
+    return User.findById(id).exec();
 };
 
-const userExistsById = async (id: Types.ObjectId): Promise<boolean> => {
+const findUsersByIds = (ids: Types.ObjectId[]): Promise<UserLean[]> => {
+    return User.find({
+        _id: { $in: ids },
+    })
+        .select("username avatar")
+        .lean<UserLean[]>()
+        .exec();
+};
+
+const userExistsById = async (
+    id: Types.ObjectId | string,
+): Promise<boolean> => {
     const exists = await User.exists({ _id: id });
     return Boolean(exists);
 };
 
 type UsernameProjection = Pick<UserLean, "_id" | "username">;
 
-const findUsernameById = async (id: Types.ObjectId): Promise<string | null> => {
+const findUsernameById = async (
+    id: Types.ObjectId | string,
+): Promise<string | null> => {
     const user = await User.findById(id)
         .select("username")
-        .lean<UsernameProjection>();
+        .lean<UsernameProjection>()
+        .exec();
 
     return user?.username ?? null;
 };
 
 const findUserByUsername = async (
-    username: string
+    username: string,
 ): Promise<UserLean | null> => {
-    const user = await User
-        .findOne({ username })
-        .lean<UserLean>();
-    return user;
+    return User.findOne({ username }).lean<UserLean>().exec();
+};
+
+const searchUsersByUsername = async (username: string): Promise<UserLean[]> => {
+    return await User.find({
+        username: { $regex: username, $options: "i" },
+    })
+        .select({ username: 1, avatar: 1 })
+        .limit(20)
+        .lean<UserLean[]>();
+};
+
+const getAllUserForSidePanel = async (): Promise<SidePanelUser[]> => {
+    return User.find({})
+        .select({ username: 1, avatar: 1 })
+        .lean<SidePanelUser[]>();
 };
 
 export const userRepo = {
     createUser,
     findUserById,
+    findUsersByIds,
     userExistsById,
     findUsernameById,
     findUserByUsername,
+    searchUsersByUsername,
+    getAllUserForSidePanel,
 };

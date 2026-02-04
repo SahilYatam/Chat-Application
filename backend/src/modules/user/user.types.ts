@@ -5,3 +5,9 @@ export interface UserData {
     username: string;
     name: string;
 }
+
+export type SidePanelUser = {
+    _id: Types.ObjectId;
+    username: string;
+    avatar?: string;
+};
