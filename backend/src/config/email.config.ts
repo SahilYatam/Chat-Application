@@ -1,9 +1,5 @@
 import nodemailer from "nodemailer";
 
-if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-    throw new Error("EMAIL_USER or EMAIL_PASSWORD is not defined");
-}
-
 export const transporter = nodemailer.createTransport({
     service: "gmail",
     pool: true,

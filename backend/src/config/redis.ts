@@ -9,6 +9,7 @@ export const redisConnection = new Redis({
     port: REDIS_PORT,
     maxRetriesPerRequest: null,
     enableReadyCheck: true,
+    retryStrategy: (times) => Math.min(times * 50, 2000)
 });
 
 /**
