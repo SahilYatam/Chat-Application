@@ -44,13 +44,17 @@ const returnObj = (chat: ChatLean): ChatEntity => {
     };
 };
 
-const createMessage = async (input: ChatInput): Promise<ChatDocument> => {
-    return Chat.create({
+const createMessage = async (input: ChatInput, session?: ClientSession): Promise<ChatDocument> => {
+    const chat = new Chat({
         conversationId: input.conversationId,
         senderId: input.senderId,
         message: input.message,
         messageType: MessageType.TEXT,
     });
+
+    await chat.save({session});
+
+    return chat
 };
 
 const findChatById = async (

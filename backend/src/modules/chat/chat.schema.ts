@@ -6,6 +6,18 @@ const sendMessageSchema = z.object({
     message: z.string().min(1, "Message cannot be empty"),
 });
 
+const getMessagesSchema = z.object({
+  conversationId: objectIdSchema,
+
+  limit: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 20))
+    .refine((val) => val > 0 && val <= 100, "Limit must be between 1 and 100"),
+
+  cursor: objectIdSchema.optional(),
+});
+
 const markMessagesAsReadSchema = z.object({
     conversationId: objectIdSchema,
 });
@@ -26,6 +38,7 @@ const deleteMessageSchema = z.object({
 
 export const chatSchema = {
     sendMessageSchema,
+    getMessagesSchema,
     markMessagesAsReadSchema,
     editMessageParamsSchema,
     editMessageBodySchema,

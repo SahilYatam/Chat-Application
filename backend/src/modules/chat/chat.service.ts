@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { chatRepo } from "./chat.repository.js";
 import { conversationRepo } from "./conversation.repository.js";
 import { friendshipRepo } from "../friendship/friendship.repository.js";
@@ -10,15 +10,18 @@ import {
     MsgEditBodyInput,
     DeleteMsgInput,
     DeleteMsgData,
+    GetMessagesInput,
+    GetMessagesResponse,
 } from "./chat.type.js";
 import { ApiError, logger, normalizeObjectId } from "../../shared/index.js";
 import { FriendshipStatus } from "../friendship/friendship.model.js";
 import { NotificationType } from "../notification/notification.model.js";
 import { notificationService } from "../notification/notification.service.js";
+import { io } from "../../socket/socket.js";
 
 const sendMessage = async (
     senderId: Types.ObjectId,
-    data: SendMsgInput
+    data: SendMsgInput,
 ): Promise<MessageData> => {
     const userA = normalizeObjectId(senderId);
     const userB = normalizeObjectId(data.receiverId);
@@ -31,13 +34,13 @@ const sendMessage = async (
     // 2. Friendship validation
     const friendship = await friendshipRepo.findFriendshipBetweenUsers(
         userA,
-        userB
+        userB,
     );
 
     if (!friendship) {
         throw new ApiError(
             403,
-            "You can only send messages to users you are friends with"
+            "You can only send messages to users you are friends with",
         );
     }
 
@@ -45,21 +48,62 @@ const sendMessage = async (
         throw new ApiError(403, "You cannot send messages to this user");
     }
 
-    // 3. Resolve conversation
-    const conversation = await conversationRepo.getOrCreateConversation(
-        userA,
-        userB
-    );
+    let chat: Awaited<ReturnType<typeof chatRepo.createMessage>>;
 
-    // 4. Persis message
-    const chat = await chatRepo.createMessage({
-        conversationId: conversation._id,
-        senderId: userA,
-        message: data.message,
-    });
+    // Transation
+    const session = await mongoose.startSession();
 
-    // 5, Fire notification (non-blocking side effect)
-    await notificationService
+    try {
+        session.startTransaction();
+
+        // 3. Resolve conversation
+        const conversation = await conversationRepo.getOrCreateConversation(
+            userA,
+            userB,
+            session,
+        );
+
+        // 4. Persis message
+        chat = await chatRepo.createMessage(
+            {
+                conversationId: conversation._id,
+                senderId: userA,
+                message: data.message,
+            },
+            session,
+        );
+
+        await session.commitTransaction();
+    } catch (err: unknown) {
+        const error = err as Error;
+        await session.abortTransaction();
+        logger.error("Error while sending message", error.message, error.stack);
+        throw error;
+    } finally {
+        session.endSession();
+    }
+
+    if (!chat) {
+        throw new Error("Invariant violation: chat not created");
+    }
+
+    // 5. Real time socket delivery
+    const receiverRoom = `user${userB.toString()}`;
+
+    try {
+        io.to(receiverRoom).emit("message", {
+            chatId: chat._id,
+            conversationId: chat.conversationId,
+            senderId: userA,
+            message: chat.message,
+            createdAt: chat.createdAt,
+        });
+    } catch (err) {
+        logger.warn("[sendMessage] Socket emit failed", { err });
+    }
+
+    // 6. Fire notification (non-blocking side effect)
+    notificationService
         .createAndDispatch({
             receiverId: userB,
             senderId: userA,
@@ -67,7 +111,7 @@ const sendMessage = async (
             entityId: chat._id,
         })
         .catch((err) => {
-            logger.error("[sendMessage] Failed to dispatch notification"), err;
+            (logger.error("[sendMessage] Failed to dispatch notification"), err);
         });
 
     return {
@@ -78,13 +122,56 @@ const sendMessage = async (
     };
 };
 
+const getMessages = async (
+    currentUserId: Types.ObjectId,
+    { conversationId, limit = 20, cursor }: GetMessagesInput,
+): Promise<GetMessagesResponse> => {
+    const normalizedConverId = normalizeObjectId(conversationId)
+
+    // 1. Checking if conversation exists or not
+    const conversation =
+        await conversationRepo.findConversationById(conversationId);
+    if (!conversation) {
+        throw new ApiError(404, "Conversation not found");
+    }
+
+    // 2. Verify user is part of this coverstion
+    const isParticipant = conversation.participants.some(
+        (id) => id.toString() === currentUserId.toString(),
+    );
+    if (!isParticipant) {
+        throw new ApiError(403, "You are not allowed to access this conversation");
+    }
+
+    // 3. Fetching messages (newest -> oldest)
+    const messages = await chatRepo.findMessagesByConversationId(
+        normalizedConverId,
+        limit,
+        cursor,
+    );
+
+    // 4. Mark user's messages as read
+    await chatRepo.markMessagesAsRead(normalizedConverId, currentUserId);
+
+    // 5. oldest -> newest messages, Reverse for ui
+    const orderMessages = messages.reverse();
+
+    const nextCursor =
+        messages.length === limit ? messages[messages.length - 1].id : null;
+
+    return {
+        messages: orderMessages,
+        nextCursor,
+    };
+};
+
 const markMessagesAsRead = async (
     conversationId: Types.ObjectId,
-    currentUserId: Types.ObjectId
+    currentUserId: Types.ObjectId,
 ): Promise<MarkMessagesAsRead> => {
     const updatedCount = await chatRepo.markMessagesAsRead(
         conversationId,
-        currentUserId
+        currentUserId,
     );
 
     return {
@@ -95,7 +182,7 @@ const markMessagesAsRead = async (
 
 const editMessage = async (
     data: MsgEditParamInput & MsgEditBodyInput,
-    currentUserId: Types.ObjectId
+    currentUserId: Types.ObjectId,
 ): Promise<MessageData> => {
     const normalizedInput = {
         ...data,
@@ -118,7 +205,7 @@ const editMessage = async (
 
 const deleteMessage = async (
     data: DeleteMsgInput,
-    currentUserId: Types.ObjectId
+    currentUserId: Types.ObjectId,
 ): Promise<DeleteMsgData> => {
     const normalizedInput = {
         chatId: normalizeObjectId(data.chatId),
@@ -126,13 +213,13 @@ const deleteMessage = async (
     };
     const deletedMsg = await chatRepo.deleteMessage(
         normalizedInput,
-        currentUserId
+        currentUserId,
     );
 
     if (!deletedMsg) {
         throw new ApiError(
             404,
-            "Message not found or you are not allowed to delete it"
+            "Message not found or you are not allowed to delete it",
         );
     }
 
@@ -147,7 +234,7 @@ const deleteMessage = async (
 
 const getMessageById = async (
     chatId: Types.ObjectId,
-    currentUserId: Types.ObjectId
+    currentUserId: Types.ObjectId,
 ): Promise<MessageData> => {
     const normalizedChatId = normalizeObjectId(chatId);
 
@@ -156,14 +243,14 @@ const getMessageById = async (
 
     // Authorization: ensure user belongs to the conversation
     const conversation = await conversationRepo.findConversationById(
-        message.conversationId
+        message.conversationId,
     );
 
     if (!conversation) throw new ApiError(404, "Conversation not found");
 
-    const isParticipant = conversation.participants.some((userId) => {
-        userId.equals(currentUserId);
-    });
+    const isParticipant = conversation.participants.some(
+        (id) => id.toString() === currentUserId.toString(),
+    );
 
     if (!isParticipant) {
         throw new ApiError(403, "You are not allowed to access this message");
@@ -177,48 +264,11 @@ const getMessageById = async (
     };
 };
 
-const getAllConversationMessages = async (
-    conversationId: Types.ObjectId | string,
-    currentUserId: Types.ObjectId,
-    limit = 20,
-    cursor?: Types.ObjectId | string
-): Promise<MessageData[]> => {
-    const normalizedConversationId = normalizeObjectId(conversationId);
-    const normalizedCursor = cursor ? normalizeObjectId(cursor) : undefined;
-
-    const conversation = await conversationRepo.findConversationById(
-        normalizedConversationId
-    );
-
-    if (!conversation) throw new ApiError(404, "Conversation not found");
-
-    const isParticipant = conversation.participants.some((userId) => {
-        userId.equals(currentUserId);
-    });
-
-    if (!isParticipant) {
-        throw new ApiError(403, "You are not allowed to access this message");
-    }
-
-    const messages = await chatRepo.findMessagesByConversationId(
-        normalizedConversationId,
-        limit,
-        normalizedCursor
-    );
-
-    return messages.map((msg) => ({
-        chatId: msg.id,
-        conversationId: msg.conversationId,
-        message: msg.message,
-        createdAt: msg.createdAt,
-    }));
-};
-
 export const chatService = {
     sendMessage,
+    getMessages,
     markMessagesAsRead,
     editMessage,
     deleteMessage,
     getMessageById,
-    getAllConversationMessages
 };

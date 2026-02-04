@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import { Types, ClientSession } from "mongoose";
 import {
     Conversation,
     ConversationSchemaType,
@@ -19,23 +19,24 @@ export type ConversationEntity = {
 
 const getOrCreateConversation = async (
     userA: Types.ObjectId,
-    userB: Types.ObjectId
+    userB: Types.ObjectId,
+    session?: ClientSession
 ): Promise<ConversationDocument> => {
     // 🔒 Enforce canonical order
     const [first, second] =
         userA.toString() < userB.toString() ? [userA, userB] : [userB, userA];
 
-    const existingConversation = await Conversation.findOne({
-        participants: [first, second],
-    });
+    const conversation = await Conversation.findOneAndUpdate(
+        {participants: [first, second]},
+        {$setOnInsert: {participants: [first, second]}},
+        {
+            new: true,
+            upsert: true,
+            session
+        }
+    )
 
-    if (existingConversation) {
-        return existingConversation;
-    }
-
-    return Conversation.create({
-        participants: [first, second],
-    });
+    return conversation
 };
 
 const findConversationById = async (

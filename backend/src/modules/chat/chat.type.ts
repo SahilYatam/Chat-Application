@@ -1,11 +1,13 @@
 import {z} from "zod";
 import { chatSchema } from "./chat.schema.js";
 import { Types } from "mongoose";
+import { ChatEntity } from "./chat.repository.js";
 
 // ============== Input Types ==============
 
 export type SendMsgInput = z.infer<typeof chatSchema.sendMessageSchema>;
 
+export type GetMessagesInput = z.infer<typeof chatSchema.getMessagesSchema>;
 
 export type MarkMsgReadInput = z.infer<typeof chatSchema.markMessagesAsReadSchema>;
 
@@ -23,6 +25,11 @@ export type BaseMessageData = {
     message: string;
     createdAt: Date;
 }
+
+export type GetMessagesResponse = {
+  messages: ChatEntity[];
+  nextCursor: Types.ObjectId | null;
+};
 
 export type MessageData = BaseMessageData;
 

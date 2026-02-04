@@ -4,24 +4,20 @@ import { chatController } from "./chat.controller.js";
 
 const router = Router();
 
-router.post("send-message", authentication, chatController.sendMessage);
+router.use(authentication);
+
+router.post("/send-message", chatController.sendMessage);
+
+router.get("/:conversationId", chatController.getMessages);
 
 router.patch(
-    "markAsRead/:conversationId",
-    authentication,
-    chatController.editMessage
+    "/edit-message/:chatId/:conversationId",
+    chatController.editMessage,
 );
 
 router.patch(
-    "edit-message/:chatId/:conversationId",
-    authentication,
-    chatController.editMessage
-);
-
-router.patch(
-    "delete-message/:chatId/:conversationId",
-    authentication,
-    chatController.deleteMessage
+    "/delete-message/:chatId/:conversationId",
+    chatController.deleteMessage,
 );
 
 export default router;

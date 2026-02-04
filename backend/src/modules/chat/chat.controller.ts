@@ -18,17 +18,33 @@ const sendMessage = asyncHandler(async (req: Request, res: Response) => {
         .json(new ApiResponse(201, result, "Message sent successfully"));
 });
 
+const getMessages = asyncHandler(async (req: Request, res: Response) => {
+    const currentUserId = req.user._id;
+    const parsed = chatSchema.getMessagesSchema.parse({
+        conversationId: req.params.conversationId,
+        limit: req.query.limit,
+        cursor: req.query.cursor,
+    });
+
+    const messages = await chatService.getMessages(currentUserId, {
+        conversationId: parsed.conversationId,
+        limit: parsed.limit,
+        cursor: parsed.cursor,
+    });
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, messages, "Messages fetched successfully"));
+});
+
 const markMessagesAsRead = asyncHandler(async (req: Request, res: Response) => {
     const currentUserId = req.user._id;
     const { conversationId } = chatSchema.markMessagesAsReadSchema.parse(
-        req.params
+        req.params,
     );
-    const converId = normalizeObjectId(conversationId)
+    const converId = normalizeObjectId(conversationId);
 
-    const result = await chatService.markMessagesAsRead(
-        converId,
-        currentUserId
-    );
+    const result = await chatService.markMessagesAsRead(converId, currentUserId);
 
     return res
         .status(200)
@@ -38,7 +54,7 @@ const markMessagesAsRead = asyncHandler(async (req: Request, res: Response) => {
 const editMessage = asyncHandler(async (req: Request, res: Response) => {
     const currentUserId = req.user._id;
     const { chatId, conversationId } = chatSchema.editMessageParamsSchema.parse(
-        req.params
+        req.params,
     );
 
     const { message } = chatSchema.editMessageBodySchema.parse(req.body);
@@ -49,7 +65,7 @@ const editMessage = asyncHandler(async (req: Request, res: Response) => {
             conversationId,
             message,
         },
-        currentUserId
+        currentUserId,
     );
 
     return res
@@ -60,7 +76,7 @@ const editMessage = asyncHandler(async (req: Request, res: Response) => {
 const deleteMessage = asyncHandler(async (req: Request, res: Response) => {
     const currentUserId = req.user._id;
     const { chatId, conversationId } = chatSchema.deleteMessageSchema.parse(
-        req.params
+        req.params,
     );
 
     const result = await chatService.deleteMessage(
@@ -68,7 +84,7 @@ const deleteMessage = asyncHandler(async (req: Request, res: Response) => {
             chatId,
             conversationId,
         },
-        currentUserId
+        currentUserId,
     );
 
     return res
@@ -78,6 +94,7 @@ const deleteMessage = asyncHandler(async (req: Request, res: Response) => {
 
 export const chatController = {
     sendMessage,
+    getMessages,
     markMessagesAsRead,
     editMessage,
     deleteMessage,
