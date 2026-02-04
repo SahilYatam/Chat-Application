@@ -3,6 +3,7 @@ import { app } from "../app.js";
 import { Server } from "socket.io";
 import { logger } from "../shared/index.js";
 import { socketAuthentication } from "./socket.auth.js";
+import { socketRedisAdapter, connectSocketRedis } from "./redis.adapter.js";
 
 const server = http.createServer(app);
 
@@ -13,57 +14,39 @@ const io = new Server(server, {
     },
 });
 
-type UserSocketMap = Record<string, Set<string>>;
-const userSocketMap: UserSocketMap = {}; // {userId: Set<socketId>}
-
-export const getReceiverSocketIds = (receiverId: string): string[] => {
-    return Array.from(userSocketMap[receiverId] ?? []);
-}
+await connectSocketRedis();
+io.adapter(socketRedisAdapter);
 
 io.use(socketAuthentication);
 
 io.on("connection", (socket) => {
-    logger.info("Socket connected", {socketId: socket.id});
+    logger.info("Socket connected", { socketId: socket.id });
 
     const rawUserId = socket.handshake.query.userId;
 
-    if(typeof rawUserId !== "string" || rawUserId.trim() === ""){
-        logger.warn("Socket connected without valid userId", {socketId: socket.id});
+    if (typeof rawUserId !== "string" || rawUserId.trim() === "") {
+        logger.warn("Socket connected without valid userId", {
+            socketId: socket.id,
+        });
         socket.disconnect(true);
         return;
     }
 
-    const userId = rawUserId;
-    socket.data.userId = userId;
+    const userRoom = `user:${rawUserId}`;
+    socket.data.userId = rawUserId;
+    socket.join(userRoom);
 
-    if(!userSocketMap[userId]){
-        userSocketMap[userId] = new Set();
-    }
-
-    userSocketMap[userId].add(socket.id)
-
-    io.emit("onlineUsers", Object.keys(userSocketMap));
+    logger.info("Socket joined room", {
+        socketId: socket.id,
+        room: userRoom,
+    });
 
     socket.on("disconnect", () => {
-        const uid = socket.data.userId;
-        logger.info("Socket disconnected", { socketId: socket.id, userId: uid });
-
-        if(!uid) return;
-
-        const sockets = userSocketMap[uid];
-        if(!sockets) return;
-
-        sockets.delete(socket.id);
-
-        if(sockets.size === 0) {
-            delete userSocketMap[uid]
-        }
-
-        io.emit("onlineUsers", Object.keys(userSocketMap));
-
-    })
-
-})
-
+        logger.info("Socket disconnected", {
+            socketId: socket.id,
+            userId: socket.data.userId,
+        });
+    });
+});
 
 export { io, server };
