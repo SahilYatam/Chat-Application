@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 import { ApiError, logger } from "../../shared/index.js";
 import { FriendRequestStatus } from "./friendRequest.model.js";
-import { friendRequestRepo } from "./friendRequest.repository.js";
+import { friendRequestRepo, GetFriendRequests } from "./friendRequest.repository.js";
 import { userRepo } from "../user/user.repository.js";
 import { friendshipRepo } from "../friendship/friendship.repository.js";
 import { FriendshipStatus } from "../friendship/friendship.model.js";
@@ -53,13 +53,22 @@ const sendFriendRequest = async (
         receiverId
     );
 
-    await notificationService.createAndDispatch({
-        receiverId,
-        senderId,
-        entityId: friendRequest._id,
-        type: NotificationType.FRIEND_REQUEST_RECEIVED,
-    });
+    try {
+        await notificationService.createAndDispatch({
+            receiverId,
+            senderId,
+            entityId: friendRequest._id,
+            type: NotificationType.FRIEND_REQUEST_RECEIVED,
+        });
+    } catch (err: unknown) {
+        logger.error("error while sending notification friend-request", err)
+    }
 };
+
+const getFriendRequests = async(userId: Types.ObjectId): Promise<GetFriendRequests[]> => {
+    const requests = await friendRequestRepo.getFriendRequests(userId);
+    return requests
+}
 
 const acceptFriendRequest = async (
     requestId: Types.ObjectId,
@@ -131,12 +140,16 @@ const acceptFriendRequest = async (
         session.endSession();
     }
 
-    await notificationService.createAndDispatch({
-        receiverId: request.senderId,
-        senderId: currentUserId,
-        entityId: requestId,
-        type: NotificationType.FRIEND_REQUEST_ACCEPTED,
-    });
+    try {
+        await notificationService.createAndDispatch({
+            receiverId: request.senderId,
+            senderId: currentUserId,
+            entityId: requestId,
+            type: NotificationType.FRIEND_REQUEST_ACCEPTED,
+        });
+    } catch (err: unknown) {
+        logger.error("error while accept friendrequest notification", err)
+    }
 };
 
 const rejectFriendRequest = async (
@@ -177,16 +190,21 @@ const rejectFriendRequest = async (
         FriendRequestStatus.REJECTED
     );
 
-    await notificationService.createAndDispatch({
-        receiverId: request.senderId,
-        senderId: currentUserId,
-        entityId: requestId,
-        type: NotificationType.FRIEND_REQUEST_REJECTED,
-    });
+    try {
+        await notificationService.createAndDispatch({
+            receiverId: request.senderId,
+            senderId: currentUserId,
+            entityId: requestId,
+            type: NotificationType.FRIEND_REQUEST_REJECTED,
+        });
+    } catch (err: unknown) {
+         logger.error("error while reject friendrequest notification", err)
+    }
 };
 
 export const friendRequestService = {
     sendFriendRequest,
+    getFriendRequests,
     acceptFriendRequest,
     rejectFriendRequest,
 };

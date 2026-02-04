@@ -1,23 +1,28 @@
 import { Router } from "express";
 import { friendRequestController } from "./friendRequest.controller.js";
 import { authentication } from "../../middlewares/auth.middleware.js";
+
 const router = Router();
+
+router.use(authentication)
 
 router.post(
     "/send-friendRequest/:receiverId",
-    authentication,
     friendRequestController.sendFriendRequest
 );
 
+router.get(
+    "/",
+    friendRequestController.getFriendRequests
+)
+
 router.post(
     "/accept-friendRequest/:requestId",
-    authentication,
     friendRequestController.acceptFriendRequest
 );
 
 router.post(
     "/reject-friendRequest/:requestId",
-    authentication,
     friendRequestController.rejectFriendRequest
 );
 
