@@ -13,7 +13,7 @@ import {
 
 const singup = async (data: SignupInput): Promise<UserPublicData> => {
     const existingUser = await userRepo.findUserByUsername(data.username);
-
+    console.log("existingUser =>", existingUser);
     if (existingUser) {
         throw new ApiError(403, "Username already taken");
     }
@@ -48,11 +48,13 @@ const singup = async (data: SignupInput): Promise<UserPublicData> => {
 
 const login = async (data: LoginInput): Promise<UserPublicData> => {
     const user = await userRepo.findUserByUsername(data.username);
+    
     if (!user) {
         throw new ApiError(404, "User not found");
     }
 
-    const authUser = await authRepo.findUserById(user._id);
+    const authUser = await authRepo.findByUserId(user._id);
+    console.log("auth userId:", authUser)
     if (!authUser) {
         throw new ApiError(404, "Auth record not found for user");
     }

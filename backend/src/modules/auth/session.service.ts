@@ -19,7 +19,7 @@ const createSession = async (
         const session = await sessionRepo.createSession({
             userId,
             refreshToken: hashedToken,
-            expiresAt: new Date(refreshTokenExpiresAt),
+            refreshTokenExpiresAt: new Date(refreshTokenExpiresAt),
             isActive: true,
             lastActivity: new Date(Date.now())
         });
@@ -97,7 +97,6 @@ const refreshAccessToken = async (refreshToken: string): Promise<AuthTokens> => 
     session.refreshToken = newRefreshToken;
     session.refreshTokenExpiresAt = refreshTokenExpiresAt;
 
-    await session.save();
 
     logger.info("✅ Access token refreshed", {
         userId: session.userId,

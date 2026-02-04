@@ -1,4 +1,4 @@
-import { Schema, model, Types, Document } from "mongoose";
+import { Schema, model, Types, HydratedDocument } from "mongoose";
 
 export interface SessionSchemaType {
     userId: Types.ObjectId;
@@ -10,7 +10,7 @@ export interface SessionSchemaType {
     updatedAt: Date;
 }
 
-export type SessionDocument = SessionSchemaType & Document;
+export type SessionDocument = HydratedDocument<SessionSchemaType>;
 
 const sessionSchema = new Schema<SessionSchemaType>({
     userId: {
@@ -21,13 +21,11 @@ const sessionSchema = new Schema<SessionSchemaType>({
 
     refreshToken: {
         type: String,
-        unique: true,
         required: true
     },
 
     refreshTokenExpiresAt: {
         type: Date,
-        required: true
     },
 
     isActive: {
