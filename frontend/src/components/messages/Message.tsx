@@ -1,6 +1,11 @@
-// import { extractTime } from "../../utils/extractTime";
+import { extractTime } from "../../utils/extractTime";
 
-const Message = () => {
+interface MessageFormat  {
+    message: string;
+    createdAt: string;
+}
+
+const Message = ({message, createdAt}: MessageFormat) => {
   const bubbleBgColor = "bg-blue-500";
   return (
     <div className={`chat`}>
@@ -12,10 +17,10 @@ const Message = () => {
       <p
         className={`chat-bubble text-white ${bubbleBgColor} text-sm md:text-md`}
       >
-        "Hi"
+        {message}
       </p>
       <span className="chat-footer opacity-50 text-xs flex gap-1 items-center text-white">
-        "12:00"
+        {extractTime(createdAt)}
       </span>
     </div>
   );
