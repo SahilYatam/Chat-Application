@@ -8,6 +8,15 @@ body {
 	background-position: center;
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+
 /* dark mode looking scrollbar */
 ::-webkit-scrollbar {
 	width: 8px;
