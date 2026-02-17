@@ -4,7 +4,7 @@ import { Input, Button } from "../shared/index";
 import { Eye, EyeOff } from "lucide-react";
 
 interface LoginFormData {
-    email: string;
+    username: string;
     password: string;
 }
 
@@ -14,23 +14,21 @@ interface LoginFormProps {
 }
 
 interface FormErrors {
-    email?: string;
+    username?: string;
     password?: string;
 }
 
 const LoginForm = ({ onSubmit, loading = false }: LoginFormProps) => {
-    const [email, setEmail] = useState<string>("");
+    const [username, setUsername] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const [errors, setErrors] = useState<FormErrors>({});
 
-    const validateForm = ({ email, password }: LoginFormData): FormErrors => {
+    const validateForm = ({ username, password }: LoginFormData): FormErrors => {
         const newErrors: FormErrors = {};
 
-        if (!email.trim()) {
-            newErrors.email = "Email is required";
-        } else if (!/^\S+@\S+\.\S+$/.test(email)) {
-            newErrors.email = "Email is invalid";
+        if (!username.trim()) {
+            newErrors.username = "Username is required";
         }
 
         if (!password.trim()) {
@@ -43,17 +41,17 @@ const LoginForm = ({ onSubmit, loading = false }: LoginFormProps) => {
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        const validationErrors = validateForm({ email, password });
+        const validationErrors = validateForm({ username, password });
         setErrors(validationErrors);
 
         if (Object.keys(validationErrors).length === 0) {
-            onSubmit({ email, password });
+            onSubmit({ username, password });
         }
     };
 
-    const handleEmailChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setEmail(e.target.value);
-        if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
+    const handleUsernameChange = (e: ChangeEvent<HTMLInputElement>) => {
+        setUsername(e.target.value);
+        if (errors.username) setErrors((prev) => ({ ...prev, email: undefined }));
     };
 
     const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -65,12 +63,12 @@ const LoginForm = ({ onSubmit, loading = false }: LoginFormProps) => {
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
             <Input
-                type="email"
-                label="Email Address"
-                value={email}
-                onChange={handleEmailChange}
-                placeholder="you@example.com"
-                error={errors.email}
+                type="text"
+                label="Username"
+                value={username}
+                onChange={handleUsernameChange}
+                placeholder="JohnDoe123"
+                error={errors.username}
             />
 
             <div className="relative">
