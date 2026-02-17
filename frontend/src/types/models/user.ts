@@ -1,7 +1,7 @@
 // User model representing autheticated user data
 
 export interface User {
-    id: string;
+    _id: string;
     username: string;
     name: string;
     email: string;
@@ -13,7 +13,7 @@ export interface User {
 // Public user profile
 
 export interface UserProfile {
-    id: string;
+    _id: string;
     username: string;
     name: string;
     avatar?: string;

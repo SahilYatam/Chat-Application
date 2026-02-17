@@ -5,16 +5,18 @@ export interface SignupCredentials {
     name: string;
     email: string;
     password: string;
+    gender: string;
 }
 
 export interface LoginCredentials {
-    email: string;
+    username: string;
     password: string;
 }
 
 // Response from successful authentication
 export interface AuthResponse {
-    user: User
+    user: User;
+    accessToken: string;
 }
 
 // Username & Password reset request

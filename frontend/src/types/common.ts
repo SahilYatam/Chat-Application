@@ -1,5 +1,5 @@
 // Generic loading state
-export type LoadingState = "idle" | "pending" | "succeeeded" | "failed";
+export type LoadingState = "idle" | "loading" | "succeeded" | "failed";
 
 // Generic async operation state
 export interface AsyncState<T = null> {
