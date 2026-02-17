@@ -6,17 +6,17 @@ const router = Router();
 router.use(authentication);
 
 router.get(
-    "/get-notifications/:receiverId",
+    "/",
     notificationController.getUserNotifications,
 );
 
 router.patch(
-    "/mark-as-read/:notificationId/:receiverId",
+    "/mark-as-read/:notificationId",
     notificationController.notificationMarkAsRead,
 );
 
 router.delete(
-    "/delete-notifications/:notificationId/:receiverId",
+    "/delete/:notificationId",
     notificationController.deleteNotification,
 );
 

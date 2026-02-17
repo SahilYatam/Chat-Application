@@ -3,6 +3,7 @@ import { redisConnection } from "../config/redis.js";
 import { notificationRepo } from "../modules/notification/notification.respository.js";
 import { NOTIFICATION_DELIVERY_QUEUE } from "../queue/notification.queue.js";
 import { logger, normalizeObjectId } from "../shared/index.js";
+import { emitNotificationToUser, RealtimeNotificationPayload } from "../socket/notification.socket.js";
 
 type NotificationJobPayload = {
     notificationId: string;
@@ -42,6 +43,20 @@ export const notificationWorker = new Worker(
                 logger.info(
                     `[NotificationWorker] Delivered notification: ${notificationId}`,
                 );
+
+                const notification = await notificationRepo.findById(notifId)
+
+                if(notification){
+                    const payload: RealtimeNotificationPayload = {
+                        notificationId: notification.id,
+                        receiverId: notification.receiverId.toString(),
+                        type: notification.type,
+                        createdAt: notification.createdAt
+                    }
+
+                    emitNotificationToUser(payload.receiverId, payload)
+                }
+
             }
             return {
                 delivered: true,

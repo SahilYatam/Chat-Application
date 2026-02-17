@@ -46,17 +46,16 @@ const paginationQuerySchema = z.object({
 });
 
 const getUserNotificationsSchema = z.object({
-    params: receiverIdParamSchema,
     query: paginationQuerySchema.optional(),
     cursor: notificationCursorSchema.optional(),
 });
 
 const markNotificationAsReadSchema = z.object({
-    params: notificationIdParamSchema.merge(receiverIdParamSchema),
+    params: notificationIdParamSchema
 });
 
 const deleteNotificationSchema = z.object({
-    params: notificationIdParamSchema.merge(receiverIdParamSchema),
+    params: notificationIdParamSchema
 });
 
 export const notificationSchema = {

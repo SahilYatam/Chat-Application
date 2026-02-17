@@ -13,11 +13,10 @@ import {
 const getUserNotifications = asyncHandler(
     async (req: Request, res: Response) => {
         const parsed = notificationSchema.getUserNotificationsSchema.parse({
-            params: req.params,
             query: req.query,
         });
 
-        const receiverId = parsed.params.receiverId;
+        const receiverId = req.user._id;
         const limit = parsed.query?.limit;
         const cursor = parsed.cursor;
 
@@ -49,7 +48,8 @@ const notificationMarkAsRead = asyncHandler(
             params: req.params,
         });
 
-        const { notificationId, receiverId } = parsed.params;
+        const { notificationId } = parsed.params;
+        const receiverId = req.user._id;
 
         const notifId = normalizeObjectId(notificationId);
         const userId = normalizeObjectId(receiverId);
@@ -72,11 +72,12 @@ const notificationMarkAsRead = asyncHandler(
 );
 
 const deleteNotification = asyncHandler(async (req: Request, res: Response) => {
-    const parsed = notificationSchema.markNotificationAsReadSchema.parse({
+    const parsed = notificationSchema.deleteNotificationSchema.parse({
         params: req.params,
     });
 
-    const { notificationId, receiverId } = parsed.params;
+    const { notificationId } = parsed.params;
+    const receiverId = req.user._id
 
     const notifId = normalizeObjectId(notificationId);
     const userId = normalizeObjectId(receiverId);

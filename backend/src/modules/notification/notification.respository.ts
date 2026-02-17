@@ -139,6 +139,10 @@ const getUserNotifications = async (
     };
 };
 
+const findById = async(id: Types.ObjectId): Promise<NotificationEntity | null> => {
+    return await Notification.findById(id).lean<NotificationEntity>()
+}
+
 const markAsRead = async (
     input: MarkAsReadInput
 ): Promise<MarkAsReadOutput> => {
@@ -200,6 +204,7 @@ export const notificationRepo = {
     createNotification,
     createManyNotifications,
     getUserNotifications,
+    findById,
     markAsRead,
     markManyAsRead,
     getUnreadCount,
