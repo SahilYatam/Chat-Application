@@ -42,7 +42,7 @@ const singup = async (data: SignupInput): Promise<UserPublicData> => {
         userId: user._id.toString(),
         username: user.username,
         name: user.name,
-        avatar: user.avatar,
+        avatar: user.avatar
     };
 };
 

@@ -14,7 +14,9 @@ const signup = asyncHandler(async (req: Request, res: Response) => {
     });
     setCookies(res, accessToken, refreshToken);
 
-    return res.status(201).json(new ApiResponse(201, user, "Signup Successful!"));
+    return res
+        .status(201)
+        .json(new ApiResponse(201, { accessToken, user }, "Signup Successful!"));
 });
 
 const login = asyncHandler(async (req: Request, res: Response) => {
@@ -26,7 +28,9 @@ const login = asyncHandler(async (req: Request, res: Response) => {
     });
     setCookies(res, accessToken, refreshToken);
 
-    return res.status(200).json(new ApiResponse(200, user, "Login Successful!"));
+    return res
+        .status(200)
+        .json(new ApiResponse(200, { accessToken, user }, "Login Successful!"));
 });
 
 const logout = asyncHandler(async (req: Request, res: Response) => {
@@ -51,8 +55,8 @@ const forgotUsername = asyncHandler(async (req: Request, res: Response) => {
             new ApiResponse(
                 200,
                 {},
-                "If an account exists for this email, you will receive a message shortly"
-            )
+                "If an account exists for this email, you will receive a message shortly",
+            ),
         );
 });
 
@@ -68,10 +72,10 @@ const forgotPasswordRequest = asyncHandler(
                 new ApiResponse(
                     200,
                     {},
-                    "If an account exists for this email, you will receive a message shortly"
-                )
+                    "If an account exists for this email, you will receive a message shortly",
+                ),
             );
-    }
+    },
 );
 
 const resetPassword = asyncHandler(async (req: Request, res: Response) => {
