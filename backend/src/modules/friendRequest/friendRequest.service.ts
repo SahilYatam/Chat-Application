@@ -1,7 +1,11 @@
 import { Types } from "mongoose";
 import { ApiError, logger } from "../../shared/index.js";
 import { FriendRequestStatus } from "./friendRequest.model.js";
-import { friendRequestRepo, GetFriendRequests } from "./friendRequest.repository.js";
+import {
+    FriendRequestEntity,
+    friendRequestRepo,
+    GetFriendRequests,
+} from "./friendRequest.repository.js";
 import { userRepo } from "../user/user.repository.js";
 import { friendshipRepo } from "../friendship/friendship.repository.js";
 import { FriendshipStatus } from "../friendship/friendship.model.js";
@@ -18,8 +22,8 @@ const normalizeUsers = (a: Types.ObjectId, b: Types.ObjectId) => {
 
 const sendFriendRequest = async (
     senderId: Types.ObjectId,
-    receiverId: Types.ObjectId
-): Promise<void> => {
+    receiverId: Types.ObjectId,
+): Promise<FriendRequestEntity> => {
     // 1. Prevent self-request
     if (senderId.equals(receiverId)) {
         throw new ApiError(400, "You cannot send a friend request to yourself");
@@ -32,7 +36,7 @@ const sendFriendRequest = async (
     // 3. Check existing relationship (FRIEND REQUEST responsibility)
     const existingRequest = await friendRequestRepo.findBetweenUsers(
         senderId,
-        receiverId
+        receiverId,
     );
 
     if (existingRequest) {
@@ -50,7 +54,7 @@ const sendFriendRequest = async (
 
     const friendRequest = await friendRequestRepo.createFriendRequest(
         senderId,
-        receiverId
+        receiverId,
     );
 
     try {
@@ -61,18 +65,30 @@ const sendFriendRequest = async (
             type: NotificationType.FRIEND_REQUEST_RECEIVED,
         });
     } catch (err: unknown) {
-        logger.error("error while sending notification friend-request", err)
+        logger.error("error while sending notification friend-request", err);
     }
+    const entity: FriendRequestEntity = {
+        id: friendRequest._id,
+        senderId: friendRequest.senderId,
+        receiverId: friendRequest.receiverId,
+        status: friendRequest.status,
+        createdAt: friendRequest.createdAt,
+        updatedAt: friendRequest.updatedAt,
+    };
+
+    return entity;
 };
 
-const getFriendRequests = async(userId: Types.ObjectId): Promise<GetFriendRequests[]> => {
+const getFriendRequests = async (
+    userId: Types.ObjectId,
+): Promise<GetFriendRequests[]> => {
     const requests = await friendRequestRepo.getFriendRequests(userId);
-    return requests
-}
+    return requests;
+};
 
 const acceptFriendRequest = async (
     requestId: Types.ObjectId,
-    currentUserId: Types.ObjectId
+    currentUserId: Types.ObjectId,
 ): Promise<void> => {
     const request = await friendRequestRepo.findById(requestId);
     if (!request) throw new ApiError(404, "Friend request not found");
@@ -81,7 +97,7 @@ const acceptFriendRequest = async (
     if (!request.receiverId.equals(currentUserId)) {
         throw new ApiError(
             403,
-            "You are not allowed to accept this friend request"
+            "You are not allowed to accept this friend request",
         );
     }
 
@@ -100,7 +116,7 @@ const acceptFriendRequest = async (
     // Check if friendship already exists
     const existingFriendship = await friendshipRepo.findFriendshipBetweenUsers(
         userA,
-        userB
+        userB,
     );
     if (existingFriendship) throw new ApiError(409, "Friendship already exists");
 
@@ -117,13 +133,13 @@ const acceptFriendRequest = async (
                 createdBy: currentUserId,
                 status: FriendshipStatus.ACTIVE,
             },
-            session
+            session,
         );
 
         await friendRequestRepo.updateRequestStatus(
             requestId,
             FriendRequestStatus.ACCEPTED,
-            session
+            session,
         );
 
         await session.commitTransaction();
@@ -133,7 +149,7 @@ const acceptFriendRequest = async (
         logger.error(
             "Error while accepting friend request",
             error.message,
-            error.stack
+            error.stack,
         );
         throw error;
     } finally {
@@ -148,13 +164,13 @@ const acceptFriendRequest = async (
             type: NotificationType.FRIEND_REQUEST_ACCEPTED,
         });
     } catch (err: unknown) {
-        logger.error("error while accept friendrequest notification", err)
+        logger.error("error while accept friendrequest notification", err);
     }
 };
 
 const rejectFriendRequest = async (
     requestId: Types.ObjectId,
-    currentUserId: Types.ObjectId
+    currentUserId: Types.ObjectId,
 ): Promise<void> => {
     const request = await friendRequestRepo.findById(requestId);
     if (!request) throw new ApiError(404, "Friend request not found");
@@ -163,7 +179,7 @@ const rejectFriendRequest = async (
     if (!request.receiverId.equals(currentUserId)) {
         throw new ApiError(
             403,
-            "You are not allowed to reject this friend request"
+            "You are not allowed to reject this friend request",
         );
     }
 
@@ -181,13 +197,13 @@ const rejectFriendRequest = async (
 
     const existingFriendship = await friendshipRepo.findFriendshipBetweenUsers(
         userA,
-        userB
+        userB,
     );
     if (existingFriendship) throw new ApiError(409, "Friendship already exists");
 
     await friendRequestRepo.updateRequestStatus(
         requestId,
-        FriendRequestStatus.REJECTED
+        FriendRequestStatus.REJECTED,
     );
 
     try {
@@ -198,7 +214,7 @@ const rejectFriendRequest = async (
             type: NotificationType.FRIEND_REQUEST_REJECTED,
         });
     } catch (err: unknown) {
-         logger.error("error while reject friendrequest notification", err)
+        logger.error("error while reject friendrequest notification", err);
     }
 };
 

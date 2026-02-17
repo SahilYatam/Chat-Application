@@ -7,7 +7,7 @@ const router = Router();
 router.use(authentication)
 
 router.post(
-    "/send-friendRequest/:receiverId",
+    "/send/:receiverId",
     friendRequestController.sendFriendRequest
 );
 
@@ -17,12 +17,12 @@ router.get(
 )
 
 router.post(
-    "/accept-friendRequest/:requestId",
+    "/accept/:requestId",
     friendRequestController.acceptFriendRequest
 );
 
 router.post(
-    "/reject-friendRequest/:requestId",
+    "/reject/:requestId",
     friendRequestController.rejectFriendRequest
 );
 
