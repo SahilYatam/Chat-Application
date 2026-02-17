@@ -88,10 +88,10 @@ const sendMessage = async (
     }
 
     // 5. Real time socket delivery
-    const receiverRoom = `user${userB.toString()}`;
+    const receiverRoom = `user:${userB.toString()}`;
 
     try {
-        io.to(receiverRoom).emit("message", {
+        io.to(receiverRoom).emit("chat:message", {
             chatId: chat._id,
             conversationId: chat.conversationId,
             senderId: userA,
@@ -126,7 +126,7 @@ const getMessages = async (
     currentUserId: Types.ObjectId,
     { conversationId, limit = 20, cursor }: GetMessagesInput,
 ): Promise<GetMessagesResponse> => {
-    const normalizedConverId = normalizeObjectId(conversationId)
+    const normalizedConverId = normalizeObjectId(conversationId);
 
     // 1. Checking if conversation exists or not
     const conversation =
@@ -195,6 +195,25 @@ const editMessage = async (
         throw new ApiError(404, "Message not found");
     }
 
+    try {
+        const conversation = await conversationRepo.findConversationById(
+            editMsg.conversationId,
+        );
+
+        if (conversation) {
+            for (const participantId of conversation.participants) {
+                io.to(`user:${participantId.toString()}`).emit("chat:message-edited", {
+                    chatId: editMsg._id,
+                    conversationId: editMsg.conversationId,
+                    message: editMsg.message,
+                    updatedAt: editMsg.updatedAt,
+                });
+            }
+        }
+    } catch (err) {
+        logger.warn("[editMessage] Socket emit failed", { err });
+    }
+
     return {
         chatId: editMsg._id,
         conversationId: editMsg.conversationId,
@@ -221,6 +240,23 @@ const deleteMessage = async (
             404,
             "Message not found or you are not allowed to delete it",
         );
+    }
+
+    try {
+        const conversation = await conversationRepo.findConversationById(
+            deletedMsg.conversationId,
+        );
+
+        if (conversation) {
+            for (const participantId of conversation.participants) {
+                io.to(`user:${participantId.toString()}`).emit("chat:message-deleted", {
+                    chatId: deletedMsg._id,
+                    conversationId: deletedMsg.conversationId,
+                });
+            }
+        }
+    } catch (err) {
+        logger.warn("[deleteMessage] Socket emit failed", { err });
     }
 
     return {
