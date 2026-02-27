@@ -1,16 +1,12 @@
 import React from 'react'
-import type { AppNotification } from "../../types/index";
 import NotificationItem from "./NotificationItem";
 
-interface Props {
-    notifications: AppNotification[];
-    onMarkAsRead: (id: string) => void;
-}
+import type { NotificationUIProps } from './notification-ui.types';
 
-
-const NotificationList: React.FC<Props> = ({
+const NotificationList: React.FC<NotificationUIProps> = ({
     notifications,
-    onMarkAsRead
+    onNotificationClick,
+    onDelete
 }) => {
 
     if(!notifications.length){
@@ -25,9 +21,10 @@ const NotificationList: React.FC<Props> = ({
         <div className="flex flex-col gap-3">
             {notifications.map((n) => (
                 <NotificationItem
-                    key={n.id}
+                    key={n.id ?? `${n.type}-${n.entityId}-${n.createdAt}`}
                     notification={n}
-                    onMarkAsRead={onMarkAsRead}
+                    onNotificationClick={onNotificationClick}
+                    onDelete={onDelete}
                 />
             ))}
         </div>
