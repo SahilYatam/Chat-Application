@@ -1,16 +1,16 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import api from "../../api/axios";
-import type { Notifcation } from "../../types";
+import type { AppNotification } from "../../types";
 
 const fetchNotifications = createAsyncThunk<
-    Notifcation[],
+    AppNotification[],
     void,
     { rejectValue: string }
 >("notification/fetch", async (_, { rejectWithValue }) => {
     try {
         const res = await api.get("/notification");
-        return res.data.notifications;
+        return res.data.data.notifications;
     } catch (error) {
         if (axios.isAxiosError(error)) {
             return rejectWithValue(
@@ -24,47 +24,47 @@ const fetchNotifications = createAsyncThunk<
     }
 });
 
-const markNotificationAsRead = createAsyncThunk(
-    "notfication/markAsRead",
-    async (notificationId, { rejectWithValue }) => {
-        try {
-            const res = await api.patch(
-                `/notification/mark-as-read/${notificationId}`,
-            );
-            return res.data.markAsRead;
-        } catch (error) {
-            if (axios.isAxiosError(error)) {
-                return rejectWithValue(
-                    error.response?.data?.message ??
-                    "Failed to mark as read notification.",
-                );
-            }
-
+const markNotificationAsRead = createAsyncThunk<
+    string,
+    string,
+    { rejectValue: string }
+>("notfication/markAsRead", async (notificationId, { rejectWithValue }) => {
+    try {
+        const res = await api.patch(`/notification/mark-as-read/${notificationId}`);
+        return res.data.data.markAsRead;
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
             return rejectWithValue(
-                "An unexpected error occurred while mark as read notification",
+                error.response?.data?.message ?? "Failed to mark as read notification.",
             );
         }
-    },
-);
 
-const deleteNotification = createAsyncThunk(
-    "notification/delete",
-    async (notificationId, { rejectWithValue }) => {
-        try {
-            await api.delete(`/notification/delete/${notificationId}`);
-        } catch (error) {
-            if (axios.isAxiosError(error)) {
-                return rejectWithValue(
-                    error.response?.data?.message ?? "Failed to delete notification.",
-                );
-            }
+        return rejectWithValue(
+            "An unexpected error occurred while mark as read notification",
+        );
+    }
+});
 
+const deleteNotification = createAsyncThunk<
+    string,
+    string,
+    { rejectValue: string }
+>("notification/delete", async (notificationId, { rejectWithValue }) => {
+    try {
+        await api.delete(`/notification/delete/${notificationId}`);
+        return notificationId;
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
             return rejectWithValue(
-                "An unexpected error occurred while deleting notification",
+                error.response?.data?.message ?? "Failed to delete notification.",
             );
         }
-    },
-);
+
+        return rejectWithValue(
+            "An unexpected error occurred while deleting notification",
+        );
+    }
+});
 
 export const notificationThunks = {
     fetchNotifications,

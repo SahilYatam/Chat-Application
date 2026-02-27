@@ -1,17 +1,21 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type { Message } from "../../types/index";
+import type { Conversation, LoadingState, Message } from "../../types/index";
 import { getMessages } from "./chatThunks";
 
 interface ChatState {
+    conversationsById: Record<string, Conversation>;
     messagesByConversation: Record<string, Message[]>;
     activeConversationId: string | null;
-    status: "idle" | "loading" | "failed";
+    selectedUserId: string | null;
+    status: LoadingState;
     error: string | null;
 }
 
 const initialState: ChatState = {
+    conversationsById: {},
     messagesByConversation: {},
     activeConversationId: null,
+    selectedUserId: null,
     status: "idle",
     error: null
 }
@@ -23,6 +27,10 @@ const chatSlice = createSlice({
     reducers: {
         setActiveConversation(state, action: PayloadAction<string>){
             state.activeConversationId = action.payload;
+        },
+
+        setSelectedUser(state, action) {
+            state.selectedUserId = action.payload
         },
 
         messageReceived(state, action){
@@ -66,7 +74,7 @@ const chatSlice = createSlice({
                 state.status = "loading";
             })
             .addCase(getMessages.fulfilled, (state, action) => {
-                state.status = "idle";
+                state.status = "succeeded";
                 state.messagesByConversation[action.payload.conversationId] = action.payload.messages;
             })
             .addCase(getMessages.rejected, (state, action) => {
@@ -78,6 +86,7 @@ const chatSlice = createSlice({
 
 export const {
     setActiveConversation,
+    setSelectedUser,
     messageReceived,
     messageUpdated,
     messageDeleted

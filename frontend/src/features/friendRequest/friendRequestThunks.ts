@@ -1,6 +1,8 @@
 import axios from "axios";
 import api from "../../api/axios";
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import type { FriendshipStatus } from "../../types";
+
 
 const sendFriendRequest = createAsyncThunk(
     "friendRequets/send",
@@ -28,7 +30,7 @@ const acceptFriendRequest = createAsyncThunk(
     async (requestId: string, { rejectWithValue }) => {
         try {
             const res = await api.post(`/friendRequest/accept/${requestId}`);
-            return res.data;
+            return res.data.data;
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 return rejectWithValue(
@@ -49,7 +51,7 @@ const rejectFriendRequest = createAsyncThunk(
     async (requestId: string, { rejectWithValue }) => {
         try {
             const res = await api.post(`/friendRequest/reject/${requestId}`);
-            return res.data;
+            return res.data.data;
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 return rejectWithValue(
@@ -86,9 +88,37 @@ const getFriendRequests = createAsyncThunk(
     },
 );
 
+const getFriendshipStatus = createAsyncThunk<
+    FriendshipStatus,   
+    string,             
+    { rejectValue: string }
+>(
+    "friendRequest/status",
+    async (userId, { rejectWithValue }) => {
+        try {
+            const res = await api.get(`/friendRequest/${userId}`);
+            return res.data.data.status;
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                return rejectWithValue(
+                    error.response?.data?.message ??
+                    "failed to fetch friendship status. Please try again.",
+                );
+            }
+
+            return rejectWithValue(
+                "An unexpected error occurred while fetching friendship status",
+            );
+        }
+    },
+);
+
+
+
 export const friendRequestThunks = {
     sendFriendRequest,
     acceptFriendRequest,
     rejectFriendRequest,
     getFriendRequests,
+    getFriendshipStatus
 };

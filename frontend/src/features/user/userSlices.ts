@@ -1,9 +1,9 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type { LoadingState, User, UserProfile } from "../../types";
+import type { LoadingState, UserProfile } from "../../types";
 import { userThunks } from "./userThunks";
 
 interface UserState {
-    users: User[];
+    users: UserProfile[];
     user: UserProfile | null;
     status: LoadingState;
     error: string | null;
@@ -28,29 +28,45 @@ const userSlice = createSlice({
 
     extraReducers: (builder) => {
         builder
+            // Get all users profile
+            .addCase(userThunks.getAllUserForSidePanel.pending, (state) => {
+                state.status = "loading";
+                state.error = null;
+            })
+            .addCase(userThunks.getAllUserForSidePanel.fulfilled, (state, action) => {
+                state.status = "succeeded";
+                state.users = action.payload;
+            })
+            .addCase(userThunks.getAllUserForSidePanel.rejected, (state, action) => {
+                state.status = "failed";
+                state.error = action.payload ?? "Failed to fetch all users profile";
+            })
+
             // Get user profile
             .addCase(userThunks.getUserProfile.pending, (state) => {
-                state.status = "pending";
+                state.status = "loading";
                 state.error = null;
             })
             .addCase(userThunks.getUserProfile.fulfilled, (state, action) => {
+                console.log("✅ getUserProfile fulfilled", action.payload);
                 state.status = "succeeded";
                 state.user = action.payload;
                 state.error = null;
             })
             .addCase(userThunks.getUserProfile.rejected, (state, action) => {
+                console.log("❌ getUserProfile rejected", action.payload);
                 state.status = "failed";
                 state.error = action.payload ?? "Failed to fetch user profile";
             })
 
             // Search users
             .addCase(userThunks.searchUser.pending, (state) => {
-                state.status = "pending";
+                state.status = "loading";
                 state.error = null;
             })
             .addCase(
                 userThunks.searchUser.fulfilled,
-                (state, action: PayloadAction<User[]>) => {
+                (state, action: PayloadAction<UserProfile[]>) => {
                     state.status = "succeeded";
                     state.users = action.payload;
                 },
