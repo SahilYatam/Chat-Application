@@ -18,6 +18,7 @@ import { FriendshipStatus } from "../friendship/friendship.model.js";
 import { NotificationType } from "../notification/notification.model.js";
 import { notificationService } from "../notification/notification.service.js";
 import { io } from "../../socket/socket.js";
+import { userRepo } from "../user/user.repository.js";
 
 const sendMessage = async (
     senderId: Types.ObjectId,
@@ -36,6 +37,8 @@ const sendMessage = async (
         userA,
         userB,
     );
+
+    const username = await userRepo.findUsernameById(senderId)
 
     if (!friendship) {
         throw new ApiError(
@@ -109,6 +112,7 @@ const sendMessage = async (
             senderId: userA,
             type: NotificationType.MESSAGE_RECEIVED,
             entityId: chat._id,
+            senderUsername: username || "",
         })
         .catch((err) => {
             (logger.error("[sendMessage] Failed to dispatch notification"), err);
