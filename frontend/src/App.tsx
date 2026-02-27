@@ -1,56 +1,68 @@
 import Home from "./pages/Home";
-import { connectSocket, disconnectSocket } from "./socket/socket";
+import { connectSocket } from "./socket/socket";
 import { useEffect } from "react";
 import { registerChatSocketEvents } from "./features/chat/chatSocket";
-import { useAppSelector } from "./store/hooks";
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "./store/hooks";
+import { RouterProvider, createBrowserRouter, Outlet } from "react-router-dom";
 import { LoginPage } from "./pages/Login";
 import { SignupPage } from "./pages/Signup";
+import { setSocketReady } from "./features/auth/authSlices";
+import { userThunks } from "./features/user/userThunks";
+import { registerNotificationSocket } from "./socket/notification.socket";
+
+function RootLayout() {
+    const dispatch = useAppDispatch();
+    const {
+        user,
+        accessToken,
+        status: authStatus,
+    } = useAppSelector((state) => state.auth);
+
+    useEffect(() => {
+        if (authStatus === "idle") {
+            console.log("📥 Fetching user profile...");
+            dispatch(userThunks.getUserProfile());
+        }
+    }, [authStatus, dispatch]);
+
+    // Socket setup
+    useEffect(() => {
+        if (!user || !accessToken) return;
+
+        const socket = connectSocket(user.userId, accessToken);
+
+        socket.on("connect", () => {
+            console.log("🟢 SOCKET CONNECTED", socket.id);
+            registerChatSocketEvents(socket);
+            registerNotificationSocket(socket, dispatch);
+            dispatch(setSocketReady());
+        });
+
+        socket.on("connect_error", (err) => {
+            console.log("🔴 SOCKET CONNECTION ERROR:", err.message);
+        });
+
+        socket.on("disconnect", (reason) => {
+            console.log("🔴 SOCKET DISCONNECTED:", reason);
+        });
+    }, [user, accessToken, dispatch]);
+
+    return <Outlet />;
+}
 
 const router = createBrowserRouter([
     {
-        path: "/",
-        element: <Home/>,
+        element: <RootLayout />,
+        children: [
+            { path: "/", element: <Home /> },
+            { path: "/login", element: <LoginPage /> },
+            { path: "/signup", element: <SignupPage /> },
+        ],
     },
-
-    {
-        path: "/login",
-        element: <LoginPage/>,
-    },
-
-    {
-        path: "/signup",
-        element: <SignupPage/>,
-    },
-
-
-])
-
+]);
 
 function App() {
-    const { accessToken, user } = useAppSelector((state) => state.auth);
-
-    useEffect(() => {
-        if (!accessToken || !user) return;
-
-        const socket = connectSocket(accessToken, user._id);
-        console.log("🟢 SOCKET CONNECTED", socket.id);
-        registerChatSocketEvents(socket);
-
-        return () => {
-            disconnectSocket();
-        };
-    }, [accessToken, user]);
-
-    
-
-    return (
-        <>
-            <div className="p-4 h-screen flex items-center justify-center">
-                <RouterProvider router={router}/>
-            </div>
-        </>
-    );
+    return <RouterProvider router={router} />;
 }
 
 export default App;
