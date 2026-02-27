@@ -1,4 +1,4 @@
-import { useNavigate, Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import LoginForm from "../components/auth/LoginForm";
 import { clearError } from "../features/auth/authSlices";
 import { authThunks } from "../features/auth/authThunks";
@@ -7,16 +7,16 @@ import { useEffect } from "react";
 import type { LoginCredentials } from "../types";
 
 export const LoginPage = () => {
-    const navigate = useNavigate();
+     console.log("🔑 LOGIN PAGE RENDERED");
+    // const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
-    const { user, error } = useAppSelector((state) => state.auth);
+    const { user, error, isAuthenticated, status } = useAppSelector(
+        (state) => state.auth,
+    );
 
-    useEffect(() => {
-        if (user) {
-            navigate("/");
-        }
-    }, [user, navigate]);
+    console.log("🔑 Login render — user:", user, "isAuthenticated:", isAuthenticated, "status:", status);
+
 
     useEffect(() => {
         if (!error) return;
@@ -27,6 +27,14 @@ export const LoginPage = () => {
 
         return () => clearTimeout(timer);
     }, [error, dispatch]);
+
+    if(status === "loading"){
+        return null
+    }
+
+    if (isAuthenticated && user) {
+        return <Navigate to="/" replace />;
+    }
 
     const handleLogin = async (formData: LoginCredentials) => {
         await dispatch(authThunks.loginUser(formData));
