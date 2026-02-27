@@ -1,11 +1,11 @@
 import { Types } from "mongoose";
 import { ApiError, logger } from "../../shared/index.js";
 import { FriendRequestStatus } from "./friendRequest.model.js";
-import {
+import type {
     FriendRequestEntity,
-    friendRequestRepo,
     GetFriendRequests,
 } from "./friendRequest.repository.js";
+import { friendRequestRepo } from "./friendRequest.repository.js";
 import { userRepo } from "../user/user.repository.js";
 import { friendshipRepo } from "../friendship/friendship.repository.js";
 import { FriendshipStatus } from "../friendship/friendship.model.js";
@@ -13,6 +13,7 @@ import { NotificationType } from "../notification/notification.model.js";
 import { notificationService } from "../notification/notification.service.js";
 
 import mongoose from "mongoose";
+import { GetFriendshipStatus } from "./friendRequest.types.js";
 
 const normalizeUsers = (a: Types.ObjectId, b: Types.ObjectId) => {
     return a.toString() < b.toString()
@@ -28,6 +29,8 @@ const sendFriendRequest = async (
     if (senderId.equals(receiverId)) {
         throw new ApiError(400, "You cannot send a friend request to yourself");
     }
+
+    const username = await userRepo.findUsernameById(senderId);
 
     // 2. Ensuring receiver exists (USER responsibility)
     const receiverExists = await userRepo.findUserById(receiverId);
@@ -63,6 +66,7 @@ const sendFriendRequest = async (
             senderId,
             entityId: friendRequest._id,
             type: NotificationType.FRIEND_REQUEST_RECEIVED,
+            senderUsername: username || "",
         });
     } catch (err: unknown) {
         logger.error("error while sending notification friend-request", err);
@@ -71,6 +75,7 @@ const sendFriendRequest = async (
         id: friendRequest._id,
         senderId: friendRequest.senderId,
         receiverId: friendRequest.receiverId,
+        senderUsername: username || "",
         status: friendRequest.status,
         createdAt: friendRequest.createdAt,
         updatedAt: friendRequest.updatedAt,
@@ -92,6 +97,8 @@ const acceptFriendRequest = async (
 ): Promise<void> => {
     const request = await friendRequestRepo.findById(requestId);
     if (!request) throw new ApiError(404, "Friend request not found");
+
+    const username = await userRepo.findUsernameById(currentUserId);
 
     // Authorization: only reciver can accept
     if (!request.receiverId.equals(currentUserId)) {
@@ -162,6 +169,7 @@ const acceptFriendRequest = async (
             senderId: currentUserId,
             entityId: requestId,
             type: NotificationType.FRIEND_REQUEST_ACCEPTED,
+            senderUsername: username || "",
         });
     } catch (err: unknown) {
         logger.error("error while accept friendrequest notification", err);
@@ -174,6 +182,8 @@ const rejectFriendRequest = async (
 ): Promise<void> => {
     const request = await friendRequestRepo.findById(requestId);
     if (!request) throw new ApiError(404, "Friend request not found");
+
+    const username = await userRepo.findUsernameById(currentUserId);
 
     // Authorization
     if (!request.receiverId.equals(currentUserId)) {
@@ -212,10 +222,36 @@ const rejectFriendRequest = async (
             senderId: currentUserId,
             entityId: requestId,
             type: NotificationType.FRIEND_REQUEST_REJECTED,
+            senderUsername: username || "",
         });
     } catch (err: unknown) {
         logger.error("error while reject friendrequest notification", err);
     }
+};
+
+const getFriendshipStatus = async (
+    currentUserId: Types.ObjectId,
+    otherUserId: Types.ObjectId,
+): Promise<GetFriendshipStatus> => {
+    const friendship = await friendRequestRepo.findBetweenUsers(
+        currentUserId,
+        otherUserId,
+    );
+
+    if (!friendship) return "none";
+
+    if (friendship.status === FriendRequestStatus.ACCEPTED) return "friends";
+
+    if (friendship.status === FriendRequestStatus.REJECTED) return "rejected";
+
+    if (friendship.status === FriendRequestStatus.PENDING) {
+        const isSender =
+            friendship.senderId.toString() === currentUserId.toString();
+
+        return isSender ? "pending_outgoing" : "pending_incoming";
+    }
+
+    return "none";
 };
 
 export const friendRequestService = {
@@ -223,4 +259,5 @@ export const friendRequestService = {
     getFriendRequests,
     acceptFriendRequest,
     rejectFriendRequest,
+    getFriendshipStatus,
 };

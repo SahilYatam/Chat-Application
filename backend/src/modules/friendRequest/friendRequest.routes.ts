@@ -16,6 +16,11 @@ router.get(
     friendRequestController.getFriendRequests
 )
 
+router.get(
+    "/:otherUserId",
+    friendRequestController.getFriendshipStatus
+)
+
 router.post(
     "/accept/:requestId",
     friendRequestController.acceptFriendRequest

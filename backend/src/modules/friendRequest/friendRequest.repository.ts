@@ -15,6 +15,7 @@ export type FriendRequestEntity = {
     senderId: Types.ObjectId;
     receiverId: Types.ObjectId;
     status: FriendRequestStatus;
+    senderUsername: string;
     createdAt: Date;
     updatedAt: Date;
 };
@@ -62,7 +63,7 @@ const getFriendRequests = async (
     return requests.map((req: any) => ({
         _id: req._id,
         createdAt: req.createdAt,
-        sender: req.senderId
+        sender: req.senderId,
     }))
 };
 

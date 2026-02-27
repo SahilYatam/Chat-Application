@@ -1,5 +1,9 @@
 import { Request, Response } from "express";
-import { ApiResponse, asyncHandler } from "../../shared/index.js";
+import {
+    ApiResponse,
+    asyncHandler,
+    normalizeObjectId,
+} from "../../shared/index.js";
 import { friendRequestSchema } from "./friendRequest.schema.js";
 import { friendRequestService } from "./friendRequest.service.js";
 import { Types } from "mongoose";
@@ -67,9 +71,28 @@ const rejectFriendRequest = asyncHandler(
     },
 );
 
+const getFriendshipStatus = asyncHandler(
+    async (req: Request, res: Response) => {
+        const currentUserId = req.user._id;
+        const { otherUserId } = req.params;
+
+        const userId = normalizeObjectId(otherUserId);
+
+        const status = await friendRequestService.getFriendshipStatus(
+            currentUserId,
+            userId,
+        );
+
+        return res
+            .status(200)
+            .json(new ApiResponse(200, status, "Friendship status retrive"));
+    },
+);
+
 export const friendRequestController = {
     sendFriendRequest,
     getFriendRequests,
     acceptFriendRequest,
     rejectFriendRequest,
+    getFriendshipStatus,
 };
