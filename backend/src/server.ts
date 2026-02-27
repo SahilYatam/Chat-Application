@@ -2,7 +2,7 @@ import { logger } from "./shared/index.js";
 import { connectDB } from "./config/db.js";
 import mongoose from "mongoose";
 import {server} from "./socket/socket.js"
-
+import "./workers/notification.worker.js"
 let httpServer = server;
 
 let isShuttingDown = false;

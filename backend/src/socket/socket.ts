@@ -1,9 +1,13 @@
 import http from "http";
-import { app } from "../app.js";
 import { Server } from "socket.io";
+import { QueueEvents } from "bullmq";
+import { app } from "../app.js";
 import { logger } from "../shared/index.js";
 import { socketAuthentication } from "./socket.auth.js";
 import { socketRedisAdapter, connectSocketRedis } from "./redis.adapter.js";
+import { redisConnection } from "../config/redis.js";
+import { NOTIFICATION_DELIVERY_QUEUE } from "../queue/notification.queue.js";
+import { RealtimeNotificationPayload } from "./notification.socket.js";
 
 const server = http.createServer(app);
 
@@ -14,37 +18,54 @@ const io = new Server(server, {
     },
 });
 
+// 🔥 QueueEvents is REQUIRED to read worker return values
+const notificationQueueEvents = new QueueEvents(NOTIFICATION_DELIVERY_QUEUE, {
+    connection: redisConnection,
+});
+
+notificationQueueEvents.on("completed", ({ returnvalue }) => {
+    if(!returnvalue || typeof returnvalue !== "object"){
+        return;
+    }
+
+    const result = returnvalue as {
+        delivered?: boolean;
+        payload?: RealtimeNotificationPayload | null;
+    };
+
+    if (!result?.payload) return;
+
+    const room = `user:${result.payload.receiverId}`;
+
+    logger.info(`📢 Emitting notification to ${room}`);
+    io.to(room).emit("notification:new", result.payload);
+});
+
 await connectSocketRedis();
 io.adapter(socketRedisAdapter);
 
 io.use(socketAuthentication);
 
 io.on("connection", (socket) => {
-    logger.info("Socket connected", { socketId: socket.id });
+    const userId = socket.data.user?._id || socket.data.user?.id;
 
-    const rawUserId = socket.handshake.query.userId;
-
-    if (typeof rawUserId !== "string" || rawUserId.trim() === "") {
-        logger.warn("Socket connected without valid userId", {
-            socketId: socket.id,
-        });
+    if (!userId) {
         socket.disconnect(true);
         return;
     }
 
-    const userRoom = `user:${rawUserId}`;
-    socket.data.userId = rawUserId;
-    socket.join(userRoom);
+    const room = `user:${userId}`;
+    socket.join(room);
 
-    logger.info("Socket joined room", {
+    logger.info("🟢 Socket connected", {
         socketId: socket.id,
-        room: userRoom,
+        room,
     });
 
-    socket.on("disconnect", () => {
-        logger.info("Socket disconnected", {
+    socket.on("disconnect", (reason) => {
+        logger.info("🔴 Socket disconnected", {
             socketId: socket.id,
-            userId: socket.data.userId,
+            reason,
         });
     });
 });
