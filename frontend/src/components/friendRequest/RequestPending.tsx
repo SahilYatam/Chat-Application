@@ -2,7 +2,7 @@
 
 const RequestPending = () => {
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center">
+    <div className="flex flex-col items-center justify-center w-full h-full text-center">
         <h2 className="text-lg font-semibold text-yellow-400 mb-2">
             Request Sent
         </h2>

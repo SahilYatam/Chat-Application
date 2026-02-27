@@ -2,13 +2,14 @@ import React from "react";
 
 interface SendFriendRequestProps {
     onSend: () => void;
+    username: string | undefined;
 }
 
-const SendFriendRequest: React.FC<SendFriendRequestProps> = ({ onSend }) => {
+const SendFriendRequest: React.FC<SendFriendRequestProps> = ({ onSend, username }) => {
     return (
-        <div className="flex flex-col items-center justify-center h-full text-center">
+        <div className="flex flex-col items-center justify-center w-full h-full text-center">
             <h2 className="text-xl font-semibold text-white mb-3">
-                Send Friend Request
+                Send Friend Request To {username}
             </h2>
 
             <p className="text-white mb-6 p-3">
