@@ -12,8 +12,18 @@ interface QueueItem {
     reject: (value?: unknown) => void;
 }
 
-// Axios instance with base configuration
+// Main api instance
 const api: AxiosInstance = axios.create({
+    baseURL: "http://localhost:8000/api/v1",
+    withCredentials: true,
+    timeout: 10000,
+    headers: {
+        "Content-Type": "application/json",
+    },
+});
+
+// Separate instance only for refreshing
+const refreshApi: AxiosInstance = axios.create({
     baseURL: "http://localhost:8000/api/v1",
     withCredentials: true,
     timeout: 10000,
@@ -50,10 +60,19 @@ api.interceptors.response.use(
             _retry?: boolean;
         };
 
-        // Check if error is 401 and we haven't retried yet
+        if (originalRequest.url?.includes("/auth/refresh-access-token")) {
+            return Promise.reject(error);
+        }
+
+        if (
+            window.location.pathname === "/login" ||
+            window.location.pathname === "/signup"
+        ) {
+            return Promise.reject(error);
+        }
+
         if (error.response?.status === 401 && !originalRequest._retry) {
             if (isRefreshing) {
-                // If already refreshing, queue this request
                 return new Promise((resolve, reject) => {
                     failedQueue.push({ resolve, reject });
                 })
@@ -65,26 +84,31 @@ api.interceptors.response.use(
             isRefreshing = true;
 
             try {
-                // Refresh token endpoint call
-                await api.post(
-                    "/auth/refresh-access-token",
-                    {},
-                    {
-                        withCredentials: true,
-                    },
-                );
+                const res = await refreshApi.post("/auth/refresh-access-token", {});
+
+                const newAccessToken = res.data.data.accessToken;
+
+                const { store } = await import("../store/store");
+                const { setAccessToken } = await import("../features/auth/authSlices");
+
+                store.dispatch(setAccessToken(newAccessToken));
 
                 processQueue(null);
                 isRefreshing = false;
 
-                // Retry the original request
                 return api(originalRequest);
             } catch (refreshError) {
                 processQueue(refreshError as AxiosError);
                 isRefreshing = false;
 
-                // Redirecting to login if refresh fails
-                window.location.href = "/login";
+                failedQueue = [];
+
+                if (window.location.pathname !== "/login") {
+                    setTimeout(() => {
+                        window.location.href = "/login";
+                    }, 100);
+                }
+
                 return Promise.reject(refreshError);
             }
         }
