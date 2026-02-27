@@ -10,6 +10,8 @@ type CreateNotificationInput = {
     type: NotificationType;
     entityId: Types.ObjectId | string;
     senderId?: Types.ObjectId | null;
+    senderUsername: string;
+    isDelivered: boolean;
 };
 
 export type NotificationEntity = {
@@ -18,6 +20,7 @@ export type NotificationEntity = {
     entityId: Types.ObjectId;
     type: NotificationType;
     senderId: Types.ObjectId | null | undefined;
+    senderUsername: string;
     isRead: boolean;
     isDelivered: boolean;
     createdAt: Date;
@@ -42,6 +45,7 @@ const returnObj = (obj: any) => {
         entityId: obj.entityId,
         type: obj.type,
         senderId: obj.senderId ?? null,
+        senderUsername: obj.senderUsername,
         isRead: obj.isRead,
         isDelivered: obj.isDelivered,
         createdAt: obj.createdAt,
@@ -57,6 +61,8 @@ const createNotification = async (
         entityId: input.entityId,
         type: input.type,
         senderId: input.senderId ?? null,
+        senderUsername: input.senderUsername,
+        isDelivered: input.isDelivered,
     });
 
     const obj = doc.toObject();
@@ -75,6 +81,8 @@ const createManyNotifications = async (
             entityId: input.entityId,
             type: input.type,
             senderId: input.senderId ?? null,
+            senderUsername: input.senderUsername,
+            isDelivered: input.isDelivered,
         })),
         { ordered: true }
     );

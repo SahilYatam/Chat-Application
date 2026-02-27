@@ -15,6 +15,8 @@ export interface NotificationSchemaType {
 
     entityId: Types.ObjectId; // friendRequestId | friendshipId | chatId | conversationId
 
+    senderUsername: string;
+
     isRead: boolean;
     isDelivered: boolean;
 
@@ -37,6 +39,11 @@ const notificationSchema = new Schema<NotificationSchemaType>(
             type: Schema.Types.ObjectId,
             ref: "User",
             default: null,
+        },
+
+        senderUsername: {
+            type: String,
+            required: true
         },
 
         type: {

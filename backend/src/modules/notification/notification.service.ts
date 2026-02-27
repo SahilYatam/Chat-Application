@@ -14,6 +14,7 @@ type CreateNotificationInput = {
     senderId: Types.ObjectId;
     type: NotificationType;
     entityId: Types.ObjectId;
+    senderUsername: string;
 };
 
 const createAndDispatch = async (input: CreateNotificationInput) => {
@@ -28,6 +29,8 @@ const createAndDispatch = async (input: CreateNotificationInput) => {
         senderId: currentUserId ?? null,
         type: input.type,
         entityId: entId,
+        senderUsername: input.senderUsername,
+        isDelivered: false
     });
 
     // 3. Enqueue delivery job
@@ -35,6 +38,7 @@ const createAndDispatch = async (input: CreateNotificationInput) => {
         notificationId: notification.id,
         receiverId: input.receiverId.toString(),
         type: input.type,
+        senderUsername: input.senderUsername
     });
 
     return notification;
