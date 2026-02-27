@@ -17,8 +17,8 @@ const createUser = async (input: CreateUserInput): Promise<UserDocument> => {
     return User.create(input);
 };
 
-const findUserById = async (id: Types.ObjectId): Promise<UserLean | null> => {
-    return User.findById(id).exec();
+const findUserById = async (id: string | Types.ObjectId): Promise<UserLean | null> => {
+    return User.findById(id).lean<UserLean>().exec();
 };
 
 const findUsersByIds = (ids: Types.ObjectId[]): Promise<UserLean[]> => {
