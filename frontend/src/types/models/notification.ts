@@ -17,7 +17,6 @@ export interface AppNotification {
     isDelivered: boolean;
 
     createdAt: string;
-    updatedAt: string;
 
-    senderName?: string;
+    senderUsername: string;
 }

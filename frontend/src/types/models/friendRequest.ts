@@ -7,3 +7,10 @@ export type FriendRequest = {
     createdAt: string;
     updatedAt: string;
 }
+
+export type FriendshipStatus =
+    | "none"
+    | "friends"
+    | "pending_incoming"
+    | "pending_outgoing"
+    | null;
