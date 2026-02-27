@@ -90,10 +90,15 @@ const resetPassword = asyncHandler(async (req: Request, res: Response) => {
 });
 
 const refreshAccessToken = asyncHandler(async (req: Request, res: Response) => {
+    console.log("🍪 All cookies:", req.cookies); // ✅ shows ALL cookies
+    console.log("🍪 Headers:", req.headers.cookie); // ✅ shows raw cookie header
     const { refreshToken: oldRefreshToken } =
         authSchema.refreshTokenValidationSchema.parse({
             refreshToken: req.cookies.refreshToken,
         });
+
+
+    console.log("🍪 Cookie refreshToken:", oldRefreshToken);
 
     const { accessToken, refreshToken: newRefreshToken } =
         await sessionService.refreshAccessToken(oldRefreshToken);
@@ -102,7 +107,7 @@ const refreshAccessToken = asyncHandler(async (req: Request, res: Response) => {
 
     return res
         .status(200)
-        .json(new ApiResponse(200, {}, "Access token refreshed"));
+        .json(new ApiResponse(200, {accessToken}, "Access token refreshed"));
 });
 
 export const authController = {

@@ -15,6 +15,7 @@ const ACCESS_TOKEN_EXPIRY = "15m";
 const REFRESH_TOKEN_EXPIRY_DAYS = 7;
 
 export const generateAccessAndRefreshToken = (userId: string): AuthTokens => {
+
     const secret = process.env.ACCESS_TOKEN;
     if(!secret) throw new Error("ACCESS_TOKEN secret is not defined");
 

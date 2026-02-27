@@ -1,7 +1,6 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { userRepo } from "../../user/user.repository.js";
+import { UserLean, userRepo } from "../../user/user.repository.js";
 import { ApiError, logger } from "../../../shared/index.js";
-import { UserDocument } from "../../user/user.model.js";
 
 export interface AuthJwtPayload extends JwtPayload {
     userId?: string;
@@ -11,7 +10,7 @@ export interface AuthJwtPayload extends JwtPayload {
 
 export interface AuthContext {
     userId: string;
-    user: UserDocument;
+    user: UserLean;
 }
 
 export const verifyAccessToken = async (

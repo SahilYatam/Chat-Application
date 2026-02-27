@@ -13,15 +13,19 @@ export const setCookies = (
     res.cookie("accessToken", accessToken, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: "none",
-        maxAge: ACCESS_TOKEN_MAX_AGE
+        sameSite: isProduction ? "none" as const : "lax" as const,
+        maxAge: ACCESS_TOKEN_MAX_AGE,
+        domain: "localhost", // ✅ add this
+        path: "/",
     });
 
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: "none",
-        maxAge: REFRESH_TOKEN_MAX_AGE
+        sameSite: isProduction ? "none" as const : "lax" as const,
+        maxAge: REFRESH_TOKEN_MAX_AGE,
+        domain: "localhost", // ✅ add this
+        path: "/",
     });
 }
 
@@ -31,12 +35,12 @@ export const clearCookies = (res: Response): void => {
     res.clearCookie("accessToken", {
         httpOnly: true,
         secure: isProduction,
-        sameSite: "none",
+        sameSite: isProduction ? "none" as const : "lax" as const,
     });
 
     res.clearCookie("refreshToken", {
         httpOnly: true,
         secure: isProduction,
-        sameSite: "none",
+        sameSite: isProduction ? "none" as const : "lax" as const,
     });
 }

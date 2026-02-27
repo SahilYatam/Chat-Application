@@ -22,8 +22,8 @@ const singup = async (data: SignupInput): Promise<UserPublicData> => {
 
     const avatar =
         data.gender === Gender.MALE
-            ? `https://avatar.iran.liara.run/public/boy?userName=${encodeURIComponent(data.name)}`
-            : `https://avatar.iran.liara.run/public/girl?userName=${encodeURIComponent(data.name)}`;
+            ? `https://avatar.iran.liara.run/public/boy?username=${encodeURIComponent(data.name)}`
+            : `https://avatar.iran.liara.run/public/girl?username=${encodeURIComponent(data.name)}`;
 
     const user = await userRepo.createUser({
         username: data.username,
