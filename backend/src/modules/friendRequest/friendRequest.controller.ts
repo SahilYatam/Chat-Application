@@ -42,14 +42,20 @@ const acceptFriendRequest = asyncHandler(
             req.params,
         );
 
-        await friendRequestService.acceptFriendRequest(
+        const { friendId } = await friendRequestService.acceptFriendRequest(
             new Types.ObjectId(requestId),
             currentUserId,
         );
 
         return res
             .status(200)
-            .json(new ApiResponse(200, {}, "Friend request accepted successfully"));
+            .json(
+                new ApiResponse(
+                    200,
+                    { friendId: friendId.toString() },
+                    "Friend request accepted successfully",
+                ),
+            );
     },
 );
 

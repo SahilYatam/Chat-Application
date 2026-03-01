@@ -94,7 +94,7 @@ const getFriendRequests = async (
 const acceptFriendRequest = async (
     requestId: Types.ObjectId,
     currentUserId: Types.ObjectId,
-): Promise<void> => {
+): Promise<{ friendId: Types.ObjectId }> => {
     const request = await friendRequestRepo.findById(requestId);
     if (!request) throw new ApiError(404, "Friend request not found");
 
@@ -173,6 +173,10 @@ const acceptFriendRequest = async (
         });
     } catch (err: unknown) {
         logger.error("error while accept friendrequest notification", err);
+    }
+
+    return {
+        friendId: request.senderId
     }
 };
 
