@@ -79,6 +79,10 @@ const friendRequestSlice = createSlice({
                 friendRequestThunks.acceptFriendRequest.fulfilled,
                 (state, action) => {
                     const requestId = action.meta.arg;
+                    const {friendId} = action.payload;
+
+                    state.friendshipByUserId[friendId] = "friends"
+
                     state.requests = state.requests.filter((req) => req.id !== requestId);
                 },
             )

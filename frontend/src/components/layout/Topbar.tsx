@@ -7,6 +7,7 @@ import {
     notificationClicked,
     removeNotificationLocal,
 } from "../../features/notification/notification.slices";
+import { setSelectedUser } from "../../features/chat/chatSlices";
 import type { AppNotification } from "../../types";
 
 const Topbar = () => {
@@ -54,6 +55,12 @@ const Topbar = () => {
                 senderUsername: notif.senderUsername,
             }),
         );
+
+        if(notif.senderId){
+            dispatch(setSelectedUser(notif.senderId))
+        }
+
+        setIsOpen(false);
     };
 
     const onDeleteNotification = (id: string) => {

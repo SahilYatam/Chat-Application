@@ -45,27 +45,6 @@ const MessageContainer = () => {
         return <NoChatSelected />;
     }
 
-    if (friendshipStatus === "none") {
-        return (
-            <div className="flex-1 flex items-center justify-center">
-                <SendFriendRequest
-                    onSend={handleSendFriendRequest}
-                    username={selectedUser?.username}
-                />
-            </div>
-        );
-    }
-
-    if (
-        friendshipStatus === "pending_outgoing" ||
-        friendshipStatus === "pending_incoming"
-    ) {
-        return (
-            <div className="flex-1 flex items-center justify-center">
-                <RequestPending />
-            </div>
-        );
-    }
 
     const onAccept = async (requestId: string) => {
         await dispatch(friendRequestThunks.acceptFriendRequest(requestId));
@@ -90,6 +69,29 @@ const MessageContainer = () => {
                     onAccept={onAccept}
                     onReject={onReject}
                 />
+            </div>
+        );
+    }
+
+
+    if (friendshipStatus === "none") {
+        return (
+            <div className="flex-1 flex items-center justify-center">
+                <SendFriendRequest
+                    onSend={handleSendFriendRequest}
+                    username={selectedUser?.username}
+                />
+            </div>
+        );
+    }
+
+    if (
+        friendshipStatus === "pending_outgoing" ||
+        friendshipStatus === "pending_incoming"
+    ) {
+        return (
+            <div className="flex-1 flex items-center justify-center">
+                <RequestPending />
             </div>
         );
     }
