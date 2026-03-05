@@ -176,8 +176,8 @@ const acceptFriendRequest = async (
     }
 
     return {
-        friendId: request.senderId
-    }
+        friendId: request.senderId,
+    };
 };
 
 const rejectFriendRequest = async (
@@ -237,20 +237,32 @@ const getFriendshipStatus = async (
     currentUserId: Types.ObjectId,
     otherUserId: Types.ObjectId,
 ): Promise<GetFriendshipStatus> => {
-    const friendship = await friendRequestRepo.findBetweenUsers(
+    // 1. Checking the frienship exit or not
+    const friendship = await friendshipRepo.findFriendshipBetweenUsers(
         currentUserId,
         otherUserId,
     );
 
-    if (!friendship) return "none";
+    if (friendship) {
+        if (friendship.status === FriendshipStatus.ACTIVE) {
+            return "friends";
+        }
+        if (friendship.status === FriendshipStatus.BLOCKED) {
+            return "blocked";
+        }
+    }
 
-    if (friendship.status === FriendRequestStatus.ACCEPTED) return "friends";
+    const request = await friendRequestRepo.findBetweenUsers(
+        currentUserId,
+        otherUserId,
+    );
 
-    if (friendship.status === FriendRequestStatus.REJECTED) return "rejected";
+    if (!request) return "none";
 
-    if (friendship.status === FriendRequestStatus.PENDING) {
-        const isSender =
-            friendship.senderId.toString() === currentUserId.toString();
+    if (request.status === FriendRequestStatus.REJECTED) return "rejected";
+
+    if (request.status === FriendRequestStatus.PENDING) {
+        const isSender = request.senderId.toString() === currentUserId.toString();
 
         return isSender ? "pending_outgoing" : "pending_incoming";
     }

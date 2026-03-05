@@ -8,4 +8,5 @@ export type GetFriendshipStatus =
     | "friends"
     | "pending_incoming"
     | "pending_outgoing"
-    | "rejected";
+    | "rejected"
+    | "blocked";
