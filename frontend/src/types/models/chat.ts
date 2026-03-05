@@ -6,7 +6,7 @@ export interface Conversation {
 }
 
 export interface Message {
-    chatId: string;
+    id: string;
     conversationId: string;
     senderId: string;
     message: string;

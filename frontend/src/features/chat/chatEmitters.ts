@@ -1,5 +1,11 @@
 import {getSocket} from "../../socket/socket"
 
-export const sendMessage = (payload: string) => {
+interface SendMessagePayload {
+    conversationId: string;
+    message: string;
+}
+
+
+export const sendMessage = (payload: SendMessagePayload) => {
     getSocket()?.emit("chat:message", payload)
 }

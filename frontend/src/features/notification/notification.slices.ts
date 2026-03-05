@@ -2,7 +2,6 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { AppNotification, LoadingState, NotificationType } from "../../types";
 import { notificationThunks } from "./notification.thunks";
 
-
 interface ActiveEntity {
     type: NotificationType,
     entityId: string,
@@ -51,7 +50,11 @@ const notficationSlice = createSlice({
             state,
             action: PayloadAction<{type: NotificationType; entityId: string, senderUsername: string}>
         ) => {
-            state.activeEntity = action.payload
+            if(action.payload.type === "FRIEND_REQUEST_RECEIVED"){
+                state.activeEntity = action.payload
+            } else {
+                state.activeEntity = null
+            }
         },
 
         // Clear active entity after accept or reject friend request

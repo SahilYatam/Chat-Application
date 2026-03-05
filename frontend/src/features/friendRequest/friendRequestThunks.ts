@@ -97,7 +97,9 @@ const getFriendshipStatus = createAsyncThunk<
     async (userId, { rejectWithValue }) => {
         try {
             const res = await api.get(`/friendRequest/${userId}`);
-            return res.data.data.status;
+
+            console.log("🔥 Backend status:", res.data.data);
+            return res.data.data;
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 return rejectWithValue(

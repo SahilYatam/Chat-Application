@@ -4,7 +4,7 @@ import { messageReceived } from "../features/chat/chatSlices";
 
 export const registerSocketListeners =(socket: Socket) => {
     // New chat message
-    socket.on("message", (payload) => {
+    socket.on("chat:message", (payload) => {
         store.dispatch(messageReceived(payload))
     });
 }

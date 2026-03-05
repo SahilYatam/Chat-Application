@@ -7,6 +7,7 @@ import type {
     LoginCredentials,
     AuthResponse
 } from "../../types/index";
+import { logout } from "./authSlices";
 
 const signupUser = createAsyncThunk<
     AuthResponse,
@@ -48,10 +49,13 @@ const loginUser = createAsyncThunk<
     }
 });
 
-const logoutUser = createAsyncThunk("auth/logoutUser", async () => {
-    const res = await axios.post("/auth/logout");
-    return res.data;
-});
+const logoutUser = createAsyncThunk(
+  "auth/logoutUser",
+  async (_, { dispatch }) => {
+     await api.post("/auth/logout")
+     dispatch(logout())
+  }
+)
 
 const recoverUsername = createAsyncThunk(
     "auth/recoverUsername",

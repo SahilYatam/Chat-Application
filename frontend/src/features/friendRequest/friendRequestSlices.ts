@@ -23,7 +23,7 @@ const initialState: FriendRequestState = {
 };
 
 const friendRequestSlice = createSlice({
-    name: "friendRequests",
+    name: "friendRequest",
     initialState,
     reducers: {
         clearError: (state) => {
@@ -79,9 +79,9 @@ const friendRequestSlice = createSlice({
                 friendRequestThunks.acceptFriendRequest.fulfilled,
                 (state, action) => {
                     const requestId = action.meta.arg;
-                    const {friendId} = action.payload;
+                    const { friendId } = action.payload;
 
-                    state.friendshipByUserId[friendId] = "friends"
+                    state.friendshipByUserId[friendId] = "friends";
 
                     state.requests = state.requests.filter((req) => req.id !== requestId);
                 },
@@ -110,6 +110,13 @@ const friendRequestSlice = createSlice({
                 (state, action) => {
                     const userId = action.meta.arg;
                     state.friendshipLoadingByUserId[userId] = false;
+
+                    if(!action.payload){
+                        console.error("❌ Backend returned invalid friendship status");
+                        state.friendshipByUserId[userId] = "none";
+                        return;
+                    }
+
                     state.friendshipByUserId[userId] = action.payload;
                 },
             )
@@ -118,6 +125,12 @@ const friendRequestSlice = createSlice({
                 (state, action) => {
                     const userId = action.meta.arg;
                     state.friendshipLoadingByUserId[userId] = false;
+
+                    // 🔧 fallback so UI never stays blank
+                    if (!state.friendshipByUserId[userId]) {
+                        state.friendshipByUserId[userId] = "none";
+                    }
+
                     state.error = action.payload as string;
                 },
             );
