@@ -79,7 +79,6 @@ const getSessionByRefreshToken = async (refreshToken: string) => {
     console.log("📦 Session found:", session ? "YES" : "NO");
     
     const allSessions = await Session.find({}).lean();
-    console.log("📂 All sessions in DB:", allSessions.map(s => s.refreshToken));
 
     if (!session) {
         logger.warn("⚠️ Invalid refresh token (session not found)");
