@@ -10,6 +10,8 @@ router.post("/send-message", chatController.sendMessage);
 
 router.get("/:conversationId", chatController.getMessages);
 
+router.get("/conversation/:receiverId", chatController.resolveConversation)
+
 router.patch(
     "/edit-message/:chatId/:conversationId",
     chatController.editMessage,

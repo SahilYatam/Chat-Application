@@ -4,6 +4,28 @@ import { chatService } from "./chat.service.js";
 import { chatSchema } from "./chat.schema.js";
 import { normalizeObjectId } from "../../shared/index.js";
 
+const resolveConversation = asyncHandler(
+    async (req: Request, res: Response) => {
+        const senderId = req.user._id;
+        const { receiverId } = req.params;
+
+        const conversation = await chatService.resolveConversation(
+            senderId,
+            receiverId,
+        );
+
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    conversation,
+                    "Conversation resolved successfully",
+                ),
+            );
+    },
+);
+
 const sendMessage = asyncHandler(async (req: Request, res: Response) => {
     const senderId = req.user._id;
     const { receiverId, message } = chatSchema.sendMessageSchema.parse(req.body);
@@ -93,6 +115,7 @@ const deleteMessage = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const chatController = {
+    resolveConversation,
     sendMessage,
     getMessages,
     markMessagesAsRead,

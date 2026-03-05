@@ -20,6 +20,41 @@ import { notificationService } from "../notification/notification.service.js";
 import { io } from "../../socket/socket.js";
 import { userRepo } from "../user/user.repository.js";
 
+const resolveConversation = async (
+    senderId: Types.ObjectId,
+    receiverId: Types.ObjectId | string,
+) => {
+    const userA = normalizeObjectId(senderId);
+    const userB = normalizeObjectId(receiverId);
+
+    if (userA.equals(userB)) {
+        throw new ApiError(400, "You can create conversation thread to yourself");
+    }
+
+    const friendship = await friendshipRepo.findFriendshipBetweenUsers(
+        userA,
+        userB,
+    );
+
+    if (!friendship) {
+        throw new ApiError(
+            403,
+            "You can only send messages to users you are friends with",
+        );
+    }
+
+    if (friendship.status !== FriendshipStatus.ACTIVE) {
+        throw new ApiError(403, "You cannot send messages to this user");
+    }
+
+    const conversation = await conversationRepo.getOrCreateConversation(
+        userA,
+        userB,
+    );
+
+    return conversation;
+};
+
 const sendMessage = async (
     senderId: Types.ObjectId,
     data: SendMsgInput,
@@ -38,7 +73,7 @@ const sendMessage = async (
         userB,
     );
 
-    const username = await userRepo.findUsernameById(senderId)
+    const username = await userRepo.findUsernameById(senderId);
 
     if (!friendship) {
         throw new ApiError(
@@ -69,7 +104,7 @@ const sendMessage = async (
         // 4. Persis message
         chat = await chatRepo.createMessage(
             {
-                conversationId: conversation._id,
+                conversationId: conversation.id,
                 senderId: userA,
                 message: data.message,
             },
@@ -305,6 +340,7 @@ const getMessageById = async (
 };
 
 export const chatService = {
+    resolveConversation,
     sendMessage,
     getMessages,
     markMessagesAsRead,

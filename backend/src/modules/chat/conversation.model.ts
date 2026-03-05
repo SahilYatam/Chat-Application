@@ -19,8 +19,7 @@ const conversationSchema = new Schema <ConversationSchemaType>({
 }, {timestamps: true});
 
 conversationSchema.index(
-    {participants: 1},
-    {unique: true}
+    {participants: 1}
 )
 
 export const Conversation = model<ConversationSchemaType>("Conversation", conversationSchema);

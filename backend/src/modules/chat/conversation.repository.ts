@@ -20,38 +20,41 @@ export type ConversationEntity = {
 const getOrCreateConversation = async (
     userA: Types.ObjectId,
     userB: Types.ObjectId,
-    session?: ClientSession
-): Promise<ConversationDocument> => {
+    session?: ClientSession,
+): Promise<ConversationEntity> => {
     // 🔒 Enforce canonical order
     const [first, second] =
         userA.toString() < userB.toString() ? [userA, userB] : [userB, userA];
 
     const conversation = await Conversation.findOneAndUpdate(
-        {participants: [first, second]},
-        {$setOnInsert: {participants: [first, second]}},
+        { participants: [first, second] },
+        { $setOnInsert: { participants: [first, second] } },
         {
             new: true,
             upsert: true,
-            session
-        }
-    )
+            session,
+        },
+    );
 
-    return conversation
+    return {
+        id: conversation._id,
+        participants: conversation.participants,
+        createdAt: conversation.createdAt,
+        updatedAt: conversation.updatedAt,
+    };
 };
 
 const findConversationById = async (
-    conversationId: Types.ObjectId | string
+    conversationId: Types.ObjectId | string,
 ): Promise<ConversationLean | null> => {
     const id = normalizeObjectId(conversationId);
 
-    return Conversation
-        .findById(id)
-        .lean<ConversationLean>();
+    return Conversation.findById(id).lean<ConversationLean>();
 };
 
 const findConversationBetweenUsers = async (
     userA: Types.ObjectId,
-    userB: Types.ObjectId
+    userB: Types.ObjectId,
 ): Promise<ConversationLean | null> => {
     const a = normalizeObjectId(userA);
     const b = normalizeObjectId(userB);
@@ -64,7 +67,7 @@ const findConversationBetweenUsers = async (
 };
 
 const getAllConversationsForUser = async (
-    userId: Types.ObjectId
+    userId: Types.ObjectId,
 ): Promise<ConversationLean[]> => {
     return Conversation.find({
         participants: userId,
