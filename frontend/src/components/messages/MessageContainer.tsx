@@ -1,90 +1,141 @@
 import { MessageCircle } from "lucide-react";
+import { useEffect } from "react";
 import MessageInput from "./MessageInput";
 import Messages from "./Messages";
 import { useAppSelector, useAppDispatch } from "../../store/hooks";
 import SendFriendRequest from "../friendRequest/SendFriendRequest";
 import RequestPending from "../friendRequest/RequestPending";
-import { friendRequestThunks } from "../../features/friendRequest/friendRequestThunks";
-import { useEffect } from "react";
 import AcceptOrRejectRequest from "../friendRequest/AcceptOrRejectRequest";
+import { friendRequestThunks } from "../../features/friendRequest/friendRequestThunks";
 import { clearActiveEntity } from "../../features/notification/notification.slices";
+import { setSelectedUser } from "../../features/chat/chatSlices";
+
+import { getMessages, getResolveConversation } from "../../features/chat/chatThunks";
 
 const MessageContainer = () => {
     const dispatch = useAppDispatch();
 
-    const selectedUserId = useAppSelector((state) => state.chat.selectedUserId);
+    const selectedUserId = useAppSelector(state => state.chat.selectedUserId);
+    const activeEntity = useAppSelector(state => state.notification.activeEntity);
 
-    const selectedUser = useAppSelector((state) =>
-        state.user.users.find((u) => u._id === selectedUserId),
+    const selectedUser = useAppSelector(state =>
+        state.user.users.find(u => u._id === selectedUserId)
     );
 
-    const activeEntity = useAppSelector(
-        (state) => state.notification.activeEntity,
+    const friendshipStatus = useAppSelector(state =>
+        selectedUserId
+            ? state.friendRequest.friendshipByUserId[selectedUserId]
+            : undefined
     );
+
+    const isLoading = useAppSelector(state =>
+        selectedUserId
+            ? state.friendRequest.friendshipLoadingByUserId[selectedUserId]
+            : false
+    );
+
+    const activeConversationId = useAppSelector(
+        state => state.chat.activeConversationId
+    )
+
+    // 🔍 DEBUG LOGS
+    console.log("🧠 selectedUserId:", selectedUserId);
+    console.log("🤝 friendshipStatus:", friendshipStatus);
+    console.log("⏳ isLoading:", isLoading);
+    console.log("🔔 activeEntity:", activeEntity);
 
     useEffect(() => {
-        if (selectedUserId) {
-            dispatch(friendRequestThunks.getFriendshipStatus(selectedUserId));
-        }
+        if (!selectedUserId) return;
+
+        console.log("📡 fetching friendship status for:", selectedUserId);
+        dispatch(friendRequestThunks.getFriendshipStatus(selectedUserId));
     }, [dispatch, selectedUserId]);
 
-    const friendshipStatus = useAppSelector((state) =>
-        selectedUserId
-            ? (state.friendRequest.friendshipByUserId[selectedUserId] ?? "none")
-            : "none",
-    );
+    useEffect(() => {
+        if(!selectedUserId) return;
 
-    const handleSendFriendRequest = async () => {
-        if (selectedUserId) {
-            await dispatch(friendRequestThunks.sendFriendRequest(selectedUserId));
+        // it will only resolve conversation if they are friends
+        if(friendshipStatus === "friends"){
+            dispatch(getResolveConversation(selectedUserId))
         }
-    };
 
-    // No chat selected
-    if (!selectedUserId) {
-        return <NoChatSelected />;
-    }
+    }, [dispatch, selectedUserId, friendshipStatus]);
 
+    useEffect(() => {
+        if(!activeConversationId) return;
+        dispatch(getMessages(activeConversationId))
+    }, [dispatch, activeConversationId])
 
-    const onAccept = async (requestId: string) => {
-        await dispatch(friendRequestThunks.acceptFriendRequest(requestId));
-        dispatch(clearActiveEntity());
-    };
-
-    const onReject = async (requestId: string) => {
-        await dispatch(friendRequestThunks.rejectFriendRequest(requestId));
-        dispatch(clearActiveEntity());
-    };
-
-    if (
-        activeEntity?.type === "FRIEND_REQUEST_RECEIVED" &&
-        activeEntity.entityId &&
-        activeEntity.senderUsername
-    ) {
+    // 1️⃣ Notification has top priority
+    if (activeEntity?.type === "FRIEND_REQUEST_RECEIVED") {
         return (
             <div className="flex-1 flex items-center justify-center">
                 <AcceptOrRejectRequest
                     username={activeEntity.senderUsername}
                     requestId={activeEntity.entityId}
-                    onAccept={onAccept}
-                    onReject={onReject}
+                    onAccept={async (requestId) => {
+                        const res = await dispatch(
+                            friendRequestThunks.acceptFriendRequest(requestId)
+                        ).unwrap();
+
+                        dispatch(clearActiveEntity());
+                        dispatch(setSelectedUser(res.friendId));
+                    }}
+                    onReject={async (requestId) => {
+                        await dispatch(friendRequestThunks.rejectFriendRequest(requestId));
+                        dispatch(clearActiveEntity());
+                    }}
                 />
             </div>
         );
     }
 
+    // 2️⃣ No user selected
+    if (!selectedUserId) {
+        return <NoChatSelected />;
+    }
 
-    if (friendshipStatus === "none") {
+    // 3️⃣ Loading state (NEVER return null)
+    if (isLoading) {
+        return (
+            <div className="flex-1 flex items-center justify-center text-gray-400">
+                Loading...
+            </div>
+        );
+    }
+
+    // 4️⃣ Status still unknown → treat as "none"
+    if (!friendshipStatus) {
+        console.warn("⚠️ friendshipStatus undefined → fallback to SendFriendRequest");
         return (
             <div className="flex-1 flex items-center justify-center">
                 <SendFriendRequest
-                    onSend={handleSendFriendRequest}
+                    onSend={() =>
+                        selectedUserId &&
+                        dispatch(friendRequestThunks.sendFriendRequest(selectedUserId))
+                    }
                     username={selectedUser?.username}
                 />
             </div>
         );
     }
 
+    // 5️⃣ None
+    if (friendshipStatus === "none") {
+        return (
+            <div className="flex-1 flex items-center justify-center">
+                <SendFriendRequest
+                    onSend={() =>
+                        selectedUserId &&
+                        dispatch(friendRequestThunks.sendFriendRequest(selectedUserId))
+                    }
+                    username={selectedUser?.username}
+                />
+            </div>
+        );
+    }
+
+    // 6️⃣ Pending
     if (
         friendshipStatus === "pending_outgoing" ||
         friendshipStatus === "pending_incoming"
@@ -96,13 +147,12 @@ const MessageContainer = () => {
         );
     }
 
+    // 7️⃣ Friends → Chat
     return (
-        <div className="flex flex-col w-96">
-            <div className="bg-slate-500 px-4 py-2 mb-2">
+        <div className="flex flex-col w-full">
+            <div className="bg-slate-500 px-4 py-2">
                 <span className="label-text">To:</span>{" "}
-                <span className="text-gray-900 font-bold">
-                    {selectedUser?.username}
-                </span>
+                <span className="font-bold">{selectedUser?.username}</span>
             </div>
             <Messages />
             <MessageInput />
@@ -112,10 +162,10 @@ const MessageContainer = () => {
 
 export default MessageContainer;
 
+/* ---------- NO CHAT SELECTED ---------- */
+
 const NoChatSelected = () => {
     const authUser = useAppSelector((state) => state.auth.user);
-    console.log("user:", authUser);
-    console.log("username:", authUser?.username);
 
     return (
         <div className="flex items-center justify-center w-full h-full">
