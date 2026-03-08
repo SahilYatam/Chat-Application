@@ -34,6 +34,7 @@ const getUserProfile = createAsyncThunk<
 >("user/userProfile", async (_, { rejectWithValue }) => {
     try {
         const res = await api.get("/user/my-profile");
+        console.log("My-profile: ", res.data.data)
 
         return res.data.data;
     } catch (error) {
