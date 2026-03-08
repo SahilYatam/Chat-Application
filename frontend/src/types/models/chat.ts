@@ -14,5 +14,21 @@ export interface Message {
     editedAt?: string;
     read: boolean;
     isDeleted: boolean;
-    createdAt: string
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface EditMessageResponse {
+    chatId: string;
+    conversationId: string;
+    message: string;
+    createdAt: string;
+    updatedAt: string;
+}
+export interface DeleteMessageResponse {
+    chatId: string;
+    conversationId: string;
+    message: string;
+    createdAt: string;
+    isDeleted: boolean;
 }

@@ -13,7 +13,7 @@ export interface User {
 // Public user profile
 
 export interface UserProfile {
-    _id: string;
+    id: string;
     username: string;
     name: string;
     avatar: string;

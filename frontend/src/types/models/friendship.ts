@@ -1,5 +1,5 @@
 export interface Friend {
-    userId: string;
+    id: string;
     username: string;
-    avatar?: string | null;
+    avatar: string;
 }
