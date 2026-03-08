@@ -7,7 +7,15 @@ const myProfile = async (id: Types.ObjectId) => {
 
     if (!user) throw new ApiError(404, "User not found");
 
-    return user;
+    return {
+        id: user._id.toString(),
+        username: user.username,
+        name: user.name,
+        gender: user.gender,
+        avatar: user.avatar,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+    };
 };
 
 const searchUserByUsername = async (username: string) => {
@@ -17,6 +25,7 @@ const searchUserByUsername = async (username: string) => {
 
     return searchedUser;
 };
+
 
 export const userService = {
     myProfile,

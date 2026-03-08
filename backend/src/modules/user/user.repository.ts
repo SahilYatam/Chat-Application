@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import { User, Gender, UserDocument, UserSchemaType } from "./user.model.js";
+import { User, UserDocument, UserSchemaType } from "./user.model.js";
 import { SidePanelUser } from "./user.types.js";
 
 export type UserLean = UserSchemaType & {
@@ -9,15 +9,16 @@ export type UserLean = UserSchemaType & {
 type CreateUserInput = {
     username: string;
     name: string;
-    gender: Gender;
-    avatar?: string;
+    avatar: string;
 };
 
 const createUser = async (input: CreateUserInput): Promise<UserDocument> => {
     return User.create(input);
 };
 
-const findUserById = async (id: string | Types.ObjectId): Promise<UserLean | null> => {
+const findUserById = async (
+    id: string | Types.ObjectId,
+): Promise<UserLean | null> => {
     return User.findById(id).lean<UserLean>().exec();
 };
 
@@ -65,8 +66,10 @@ const searchUsersByUsername = async (username: string): Promise<UserLean[]> => {
         .lean<UserLean[]>();
 };
 
-const getAllUserForSidePanel = async (): Promise<SidePanelUser[]> => {
-    return User.find({})
+const getAllUserForSidePanel = async (
+    currentUserId: Types.ObjectId | string,
+): Promise<SidePanelUser[]> => {
+    return User.find({ _id: { $ne: currentUserId } })
         .select({ username: 1, avatar: 1 })
         .lean<SidePanelUser[]>();
 };

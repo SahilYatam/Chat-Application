@@ -1,14 +1,8 @@
 import { Schema, model, Types, HydratedDocument } from "mongoose";
 
-export enum Gender {
-  MALE = "male",
-  FEMALE = "female",
-}
-
 export interface UserSchemaType {
     username: string;
     name: string;
-    gender: Gender;
     avatar: string,
     createdAt: Date;
     updatedAt: Date;
@@ -26,12 +20,6 @@ const userSchema = new Schema<UserSchemaType>({
 
     name: {
         type: String,
-        required: true
-    },
-
-    gender: {
-        type: String,
-        enum: Object.values(Gender),
         required: true
     },
 

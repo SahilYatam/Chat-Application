@@ -26,14 +26,25 @@ const searchUserByUsername = asyncHandler(
     },
 );
 
-const getAllUserForSidePanel = asyncHandler(async(req: Request, res: Response) => {
-    const users = await userRepo.getAllUserForSidePanel();
+const getAllUserForSidePanel = asyncHandler(
+    async (req: Request, res: Response) => {
+        const currentUserId = req.user._id;
+        const users = await userRepo.getAllUserForSidePanel(currentUserId);
 
-    return res.status(200).json(new ApiResponse(200, users, "All users fetched"));
-})
+        const formattedUsers = users.map((user) => ({
+            id: user._id,
+            username: user.username,
+            avatar: user.avatar
+        }))
+
+        return res
+            .status(200)
+            .json(new ApiResponse(200, formattedUsers, "All users fetched"));
+    },
+);
 
 export const userController = {
     myProfile,
     searchUserByUsername,
-    getAllUserForSidePanel
+    getAllUserForSidePanel,
 };
