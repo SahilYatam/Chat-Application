@@ -2,14 +2,12 @@ import { useState } from "react";
 import type { FormEvent, ChangeEvent } from "react";
 import { Input, Button } from "../shared/index";
 import { Eye, EyeOff } from "lucide-react";
-import GenderCheckbox from "./GenderCheckBox";
 
 interface SignupFormData {
     name: string;
     username: string;
     email: string;
     password: string;
-    gender: string;
 }
 
 interface SignupFormProps {
@@ -22,7 +20,6 @@ interface FormErrors {
     username?: string;
     email?: string;
     password?: string;
-    gender?: string;
 }
 
 const SignupForm = ({ onSubmit, loading = false }: SignupFormProps) => {
@@ -31,14 +28,12 @@ const SignupForm = ({ onSubmit, loading = false }: SignupFormProps) => {
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [showPassword, setShowPassword] = useState<boolean>(false);
-    const [gender, setGender] = useState<"male" | "female" | "">("");
     const [errors, setErrors] = useState<FormErrors>({});
 
     const validateForm = ({
         name,
         email,
         password,
-        gender
     }: SignupFormData): FormErrors => {
         const newErrors: FormErrors = {};
 
@@ -56,10 +51,6 @@ const SignupForm = ({ onSubmit, loading = false }: SignupFormProps) => {
             newErrors.password = "Password is required";
         }
 
-        if (!gender) {
-            newErrors.gender = "Please select your gender";
-        }
-
         return newErrors;
     };
 
@@ -71,12 +62,11 @@ const SignupForm = ({ onSubmit, loading = false }: SignupFormProps) => {
             username,
             email,
             password,
-            gender,
         });
         setErrors(validationErros);
 
-        if (Object.keys(validationErros).length === 0 && gender !== "") {
-            onSubmit({ name, username, email, password, gender });
+        if (Object.keys(validationErros).length === 0) {
+            onSubmit({ name, username, email, password });
         }
     };
 
@@ -99,13 +89,6 @@ const SignupForm = ({ onSubmit, loading = false }: SignupFormProps) => {
         setPassword(e.target.value);
         if (errors.password)
             setErrors((prev) => ({ ...prev, password: undefined }));
-    };
-
-    const handleGenderChange = (selected: "male" | "female") => {
-        setGender(selected);
-        if (errors.gender) {
-            setErrors((prev) => ({ ...prev, gender: undefined }));
-        }
     };
 
     return (
@@ -160,11 +143,6 @@ const SignupForm = ({ onSubmit, loading = false }: SignupFormProps) => {
                 </button>
             </div>
 
-            <GenderCheckbox
-                selectedGender={gender}
-                onCheckboxChange={handleGenderChange}
-            />
-            {errors.gender && <p className="text-sm text-red-500">{errors.gender}</p>}
 
             <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Sign in..." : "Signup"}
