@@ -5,6 +5,7 @@ import type { TabType } from "./UserFilterTabs";
 import UserFilterTabs from "./UserFilterTabs";
 import { useState } from "react";
 
+
 const Sidebar = () => {
     const [activeTab, setActiveTab] = useState<TabType>("global");
     return (
@@ -16,7 +17,7 @@ const Sidebar = () => {
             <div className="border-t border-slate-700 my-4"></div>
 
             <div className="flex-1 overflow-y-auto no-scrollbar">
-                <Conversations />
+                <Conversations activeTab={activeTab} />
             </div>
 
             <LogOutButton />
