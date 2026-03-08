@@ -59,12 +59,6 @@ const Message = ({
     };
 
     useEffect(() => {
-        if (!isSender && !read) {
-            dispatch(chatThunk.markMessagesAsRead({ conversationId }));
-        }
-    }, []);
-
-    useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (
                 panelRef.current &&

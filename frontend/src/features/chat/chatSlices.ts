@@ -10,6 +10,7 @@ import { chatThunk } from "./chatThunks";
 interface ChatState {
     conversationsById: Record<string, Conversation>;
     messagesByConversation: Record<string, Message[]>;
+    cursorByConversation: Record<string, string | null>;
     activeConversationId: string | null;
     selectedUserId: string | null;
     status: LoadingState;
@@ -20,6 +21,7 @@ const initialState: ChatState = {
     conversationsById: {},
     messagesByConversation: {},
     activeConversationId: null,
+    cursorByConversation: {},
     selectedUserId: null,
     status: "idle",
     error: null,
@@ -99,6 +101,7 @@ const chatSlice = createSlice({
     },
 
     extraReducers: (builder) => {
+        // Send Messages
         builder
             .addCase(chatThunk.sendMessage.pending, (state) => {
                 state.status = "loading";
@@ -120,6 +123,7 @@ const chatSlice = createSlice({
                 state.error = action.payload ?? "Failed to send message";
             })
 
+            // Get Resolve Conversation
             .addCase(chatThunk.getResolveConversation.pending, (state) => {
                 state.status = "loading";
                 state.error = null;
@@ -138,17 +142,27 @@ const chatSlice = createSlice({
                 state.error = action.payload ?? "Failed to fetch conversation";
             })
 
+            // Get Messages
             .addCase(chatThunk.getMessages.pending, (state) => {
                 state.status = "loading";
             })
             .addCase(chatThunk.getMessages.fulfilled, (state, action) => {
                 console.log("FULFILLED PAYLOAD:", action.payload);
                 state.status = "succeeded";
-                const { conversationId, messages } = action.payload;
+                const { conversationId, messages, nextCursor } = action.payload;
 
-                state.messagesByConversation[conversationId] = Array.isArray(messages)
-                    ? messages
-                    : [];
+                const existing = state.messagesByConversation[conversationId] || [];
+
+                if (existing.length === 0) {
+                    state.messagesByConversation[conversationId] = messages;
+                } else {
+                    state.messagesByConversation[conversationId] = [
+                        ...messages,
+                        ...existing,
+                    ];
+                }
+
+                state.cursorByConversation[conversationId] = nextCursor;
             })
             .addCase(chatThunk.getMessages.rejected, (state, action) => {
                 state.status = "failed";

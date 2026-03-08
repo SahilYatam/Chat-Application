@@ -1,6 +1,11 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../api/axios";
-import type { Message, Conversation, EditMessageResponse, DeleteMessageResponse } from "../../types/index";
+import type {
+    Message,
+    Conversation,
+    EditMessageResponse,
+    DeleteMessageResponse,
+} from "../../types/index";
 import axios from "axios";
 
 const sendMessage = createAsyncThunk<
@@ -32,18 +37,30 @@ const getResolveConversation = createAsyncThunk<
 });
 
 const getMessages = createAsyncThunk<
-    { conversationId: string; messages: Message[] },
-    string,
+    { conversationId: string; messages: Message[]; nextCursor: string | null },
+    { conversationId: string; cursor?: string },
     { rejectValue: string }
->("chat/getMessages", async (conversationId, { rejectWithValue }) => {
-    try {
-        const res = await api.get(`/chat/${conversationId}`);
-        console.log("Received message: ", res.data);
-        return { conversationId, messages: res.data.data.messages };
-    } catch {
-        return rejectWithValue("Failed to fetch messages");
-    }
-});
+>(
+    "chat/getMessages",
+    async ({ conversationId, cursor }, { rejectWithValue }) => {
+        try {
+            const res = await api.get(`/chat/${conversationId}`, {
+                params: {
+                    cursor,
+                    limit: 20,
+                },
+            });
+            console.log("Received message: ", res.data);
+            return {
+                conversationId,
+                messages: res.data.data.messages,
+                nextCursor: res.data.data.nextCursor,
+            };
+        } catch {
+            return rejectWithValue("Failed to fetch messages");
+        }
+    },
+);
 
 const editMessage = createAsyncThunk<
     EditMessageResponse,
@@ -55,7 +72,7 @@ const editMessage = createAsyncThunk<
         try {
             const res = await api.patch(
                 `/chat/edit-message/${chatId}/${conversationId}`,
-                {message},
+                { message },
             );
 
             return res.data.data;
@@ -72,37 +89,35 @@ const editMessage = createAsyncThunk<
 );
 
 const markMessagesAsRead = createAsyncThunk<
-    {read: boolean, updatedCount: number},
-    {conversationId: string},
-    {rejectValue: string}
-> (
-    "chat/markMessagesAsRead",
-    async(conversationId, {rejectWithValue}) => {
-        try {
-            const res = await api.patch(`/chat/message-read/${conversationId}`)
-            return res.data.data
-        } catch (error) {
-            if (axios.isAxiosError(error)) {
-                return rejectWithValue(
-                    error.response?.data?.message ?? "Mark message as read failed",
-                );
-            }
-
-            return rejectWithValue("Unexpected error while marking message as read");
+    { read: boolean; updatedCount: number },
+    { conversationId: string },
+    { rejectValue: string }
+>("chat/markMessagesAsRead", async (conversationId, { rejectWithValue }) => {
+    try {
+        const res = await api.patch(`/chat/message-read/${conversationId}`);
+        return res.data.data;
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            return rejectWithValue(
+                error.response?.data?.message ?? "Mark message as read failed",
+            );
         }
+
+        return rejectWithValue("Unexpected error while marking message as read");
     }
-)
+});
 
 const deleteMessage = createAsyncThunk<
     DeleteMessageResponse,
-    { chatId: string; conversationId: string; },
+    { chatId: string; conversationId: string },
     { rejectValue: string }
 >(
     "chat/deleteMessage",
     async ({ chatId, conversationId }, { rejectWithValue }) => {
         try {
             const res = await api.patch(
-                `/chat/delete-message/${chatId}/${conversationId}`);
+                `/chat/delete-message/${chatId}/${conversationId}`,
+            );
             return res.data.data;
         } catch (error) {
             if (axios.isAxiosError(error)) {
@@ -116,12 +131,11 @@ const deleteMessage = createAsyncThunk<
     },
 );
 
-
 export const chatThunk = {
     sendMessage,
     getResolveConversation,
     getMessages,
     editMessage,
     markMessagesAsRead,
-    deleteMessage
+    deleteMessage,
 };

@@ -16,6 +16,7 @@ const MessageContainer = () => {
     const dispatch = useAppDispatch();
 
     const selectedUserId = useAppSelector(state => state.chat.selectedUserId);
+
     const activeEntity = useAppSelector(state => state.notification.activeEntity);
 
     const selectedUser = useAppSelector(state =>
@@ -37,6 +38,15 @@ const MessageContainer = () => {
     const activeConversationId = useAppSelector(
         state => state.chat.activeConversationId
     )
+
+    const messages = useAppSelector((state) => 
+        activeConversationId
+            ? state.chat.messagesByConversation[activeConversationId] || []
+            : []
+    )
+
+    const currentUserId = useAppSelector((state) => state.user.user?.id);
+    
 
     // 🔍 DEBUG LOGS
     console.log("🧠 selectedUserId:", selectedUserId);
@@ -63,8 +73,26 @@ const MessageContainer = () => {
 
     useEffect(() => {
         if(!activeConversationId) return;
-        dispatch(chatThunk.getMessages(activeConversationId))
+        dispatch(chatThunk.getMessages({
+            conversationId: activeConversationId
+        }))
     }, [dispatch, activeConversationId]);
+
+
+    useEffect(() => {
+        if(!activeConversationId) return;
+
+        const hasUnreadMsg = messages.some((msg) =>
+            !msg.read && msg.senderId !== currentUserId
+        )
+
+        if(!hasUnreadMsg) return;
+
+        dispatch(chatThunk.markMessagesAsRead({
+            conversationId: activeConversationId
+        }))
+
+    }, [dispatch, activeConversationId, messages, currentUserId])
 
     useEffect(() => {
         if(!activeConversationId) return;
