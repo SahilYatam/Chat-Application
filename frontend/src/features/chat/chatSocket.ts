@@ -1,7 +1,7 @@
 import { Socket } from "socket.io-client";
 import { store } from "../../store/store";
 
-import { messageReceived, messageUpdated, messageDeleted } from "./chatSlices";
+import { messageReceived, messageUpdated, messageDeleted, messageRead } from "./chatSlices";
 
 export const registerChatSocketEvents = (socket: Socket) => {
     socket.on("chat:message", (message) => {
@@ -9,13 +9,18 @@ export const registerChatSocketEvents = (socket: Socket) => {
         store.dispatch(messageReceived(message));
     });
 
-    socket.on("chat:message-edited", (message) => {
-        console.log("✏️ MESSAGE EDITED:", message);
-        store.dispatch(messageUpdated(message));
+    socket.on("chat:message-edited", (data) => {
+        console.log("✏️ MESSAGE EDITED:", data);
+        store.dispatch(messageUpdated(data));
     });
 
-    socket.on("chat:message-deleted", ({ conversationId, chatId }) => {
-        console.log("🗑 MESSAGE DELETED:", conversationId, chatId);
-        store.dispatch(messageDeleted({ conversationId, chatId }));
+    socket.on("chat:message-deleted", (data) => {
+        console.log("🗑 MESSAGE DELETED:", data);
+        store.dispatch(messageDeleted(data));
     });
+
+    socket.on("chat:message-read", (data) => {
+        console.log("👀 Messages read:", data);
+        store.dispatch(messageRead(data))
+    })
 };

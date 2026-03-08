@@ -1,8 +1,9 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../api/axios";
-import type { Message, Conversation } from "../../types/index";
+import type { Message, Conversation, EditMessageResponse, DeleteMessageResponse } from "../../types/index";
+import axios from "axios";
 
-export const sendMessageThunk = createAsyncThunk<
+const sendMessage = createAsyncThunk<
     Message,
     { receiverId: string; message: string },
     { rejectValue: string }
@@ -16,7 +17,7 @@ export const sendMessageThunk = createAsyncThunk<
     }
 });
 
-export const getResolveConversation = createAsyncThunk<
+const getResolveConversation = createAsyncThunk<
     Conversation,
     string,
     { rejectValue: string }
@@ -30,7 +31,7 @@ export const getResolveConversation = createAsyncThunk<
     }
 });
 
-export const getMessages = createAsyncThunk<
+const getMessages = createAsyncThunk<
     { conversationId: string; messages: Message[] },
     string,
     { rejectValue: string }
@@ -43,3 +44,84 @@ export const getMessages = createAsyncThunk<
         return rejectWithValue("Failed to fetch messages");
     }
 });
+
+const editMessage = createAsyncThunk<
+    EditMessageResponse,
+    { chatId: string; conversationId: string; message: string },
+    { rejectValue: string }
+>(
+    "chat/editMessage",
+    async ({ chatId, conversationId, message }, { rejectWithValue }) => {
+        try {
+            const res = await api.patch(
+                `/chat/edit-message/${chatId}/${conversationId}`,
+                {message},
+            );
+
+            return res.data.data;
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                return rejectWithValue(
+                    error.response?.data?.message ?? "Message editing failed",
+                );
+            }
+
+            return rejectWithValue("Unexpected error while editing message");
+        }
+    },
+);
+
+const markMessagesAsRead = createAsyncThunk<
+    {read: boolean, updatedCount: number},
+    {conversationId: string},
+    {rejectValue: string}
+> (
+    "chat/markMessagesAsRead",
+    async(conversationId, {rejectWithValue}) => {
+        try {
+            const res = await api.patch(`/chat/message-read/${conversationId}`)
+            return res.data.data
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                return rejectWithValue(
+                    error.response?.data?.message ?? "Mark message as read failed",
+                );
+            }
+
+            return rejectWithValue("Unexpected error while marking message as read");
+        }
+    }
+)
+
+const deleteMessage = createAsyncThunk<
+    DeleteMessageResponse,
+    { chatId: string; conversationId: string; },
+    { rejectValue: string }
+>(
+    "chat/deleteMessage",
+    async ({ chatId, conversationId }, { rejectWithValue }) => {
+        try {
+            const res = await api.patch(
+                `/chat/delete-message/${chatId}/${conversationId}`);
+            return res.data.data;
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                return rejectWithValue(
+                    error.response?.data?.message ?? "Message deleting failed",
+                );
+            }
+
+            return rejectWithValue("Unexpected error while deleting message");
+        }
+    },
+);
+
+
+export const chatThunk = {
+    sendMessage,
+    getResolveConversation,
+    getMessages,
+    editMessage,
+    markMessagesAsRead,
+    deleteMessage
+};
