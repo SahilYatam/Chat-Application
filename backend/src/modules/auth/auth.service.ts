@@ -3,7 +3,6 @@ import { userRepo } from "../user/user.repository.js";
 import { LoginInput, SignupInput, UserPublicData } from "./auth.types.js";
 import { ApiError } from "../../shared/index.js";
 import { comparePassword, hashPassword } from "./utils/password.util.js";
-import { Gender } from "../user/user.model.js";
 import { generateToken, hashToken } from "./utils/encryptToken.util.js";
 import { logger } from "../../shared/index.js";
 import {
@@ -20,15 +19,11 @@ const singup = async (data: SignupInput): Promise<UserPublicData> => {
 
     const hashedPassword = await hashPassword(data.password);
 
-    const avatar =
-        data.gender === Gender.MALE
-            ? `https://avatar.iran.liara.run/public/boy?username=${encodeURIComponent(data.name)}`
-            : `https://avatar.iran.liara.run/public/girl?username=${encodeURIComponent(data.name)}`;
+    const avatar = `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(data.name)}`
 
     const user = await userRepo.createUser({
         username: data.username,
         name: data.name,
-        gender: data.gender,
         avatar,
     });
 
@@ -42,19 +37,19 @@ const singup = async (data: SignupInput): Promise<UserPublicData> => {
         userId: user._id.toString(),
         username: user.username,
         name: user.name,
-        avatar: user.avatar
+        avatar: user.avatar,
     };
 };
 
 const login = async (data: LoginInput): Promise<UserPublicData> => {
     const user = await userRepo.findUserByUsername(data.username);
-    
+
     if (!user) {
         throw new ApiError(404, "User not found");
     }
 
     const authUser = await authRepo.findByUserId(user._id);
-    console.log("auth userId:", authUser)
+    console.log("auth userId:", authUser);
     if (!authUser) {
         throw new ApiError(404, "Auth record not found for user");
     }
