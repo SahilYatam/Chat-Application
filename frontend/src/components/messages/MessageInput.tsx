@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { BsSend } from "react-icons/bs";
 import { useAppSelector, useAppDispatch } from "../../store/hooks";
-// import { sendMessage } from "../../features/chat/chatEmitters";
-import { sendMessageThunk } from "../../features/chat/chatThunks";
+import { chatThunk } from "../../features/chat/chatThunks";
 
 const MessageInput = () => {
     const [message, setMessage] = useState("")
@@ -17,7 +16,7 @@ const MessageInput = () => {
         if(!message.trim() || !selectedUserId)  return;
 
         await dispatch(
-            sendMessageThunk({
+            chatThunk.sendMessage({
                 receiverId: selectedUserId,
                 message: message
             })

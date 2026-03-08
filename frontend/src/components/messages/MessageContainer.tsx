@@ -9,8 +9,8 @@ import AcceptOrRejectRequest from "../friendRequest/AcceptOrRejectRequest";
 import { friendRequestThunks } from "../../features/friendRequest/friendRequestThunks";
 import { clearActiveEntity } from "../../features/notification/notification.slices";
 import { setSelectedUser } from "../../features/chat/chatSlices";
-
-import { getMessages, getResolveConversation } from "../../features/chat/chatThunks";
+import { chatThunk } from "../../features/chat/chatThunks";
+import { getSocket } from "../../socket/socket";
 
 const MessageContainer = () => {
     const dispatch = useAppDispatch();
@@ -19,7 +19,7 @@ const MessageContainer = () => {
     const activeEntity = useAppSelector(state => state.notification.activeEntity);
 
     const selectedUser = useAppSelector(state =>
-        state.user.users.find(u => u._id === selectedUserId)
+        state.user.users.find(u => u.id === selectedUserId)
     );
 
     const friendshipStatus = useAppSelector(state =>
@@ -56,15 +56,29 @@ const MessageContainer = () => {
 
         // it will only resolve conversation if they are friends
         if(friendshipStatus === "friends"){
-            dispatch(getResolveConversation(selectedUserId))
+            dispatch(chatThunk.getResolveConversation(selectedUserId))
         }
 
     }, [dispatch, selectedUserId, friendshipStatus]);
 
     useEffect(() => {
         if(!activeConversationId) return;
-        dispatch(getMessages(activeConversationId))
-    }, [dispatch, activeConversationId])
+        dispatch(chatThunk.getMessages(activeConversationId))
+    }, [dispatch, activeConversationId]);
+
+    useEffect(() => {
+        if(!activeConversationId) return;
+
+        const socket = getSocket();
+
+        if(!socket) return;
+
+        socket.emit("chat:join", activeConversationId)
+
+        return () => {
+            socket.emit("chat:leave", activeConversationId)
+        }
+    }, [activeConversationId])
 
     // 1️⃣ Notification has top priority
     if (activeEntity?.type === "FRIEND_REQUEST_RECEIVED") {

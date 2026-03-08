@@ -21,9 +21,12 @@ const Messages = () => {
                 messages.map((msg) => (
                     <Message
                         key={msg.id}
+                        id={msg.id}
+                        conversationId={msg.conversationId}
                         message={msg.message}
                         createdAt={msg.createdAt}
                         senderId={msg.senderId}
+                        read={msg.read}
                     />
                 ))
             )}
