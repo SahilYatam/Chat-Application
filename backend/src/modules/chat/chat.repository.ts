@@ -114,7 +114,7 @@ type DeleteMsgT = {
 const editMessage = async (
     data: EditMsgT,
     currentUserId: Types.ObjectId
-): Promise<ChatDocument | null> => {
+): Promise<ChatEntity | null> => {
     return Chat.findOneAndUpdate(
         {
             _id: data.chatId,
@@ -133,7 +133,7 @@ const editMessage = async (
 const deleteMessage = async (
     data: DeleteMsgT,
     currentUserId: Types.ObjectId
-): Promise<ChatDocument | null> => {
+): Promise<ChatEntity | null> => {
     return Chat.findOneAndUpdate(
         {
             _id: data.chatId,
@@ -142,6 +142,7 @@ const deleteMessage = async (
             isDeleted: false,
         },
         {
+            message: "This message was deleted",
             isDeleted: true,
         },
         { new: true }

@@ -12,6 +12,7 @@ import {
     DeleteMsgData,
     GetMessagesInput,
     GetMessagesResponse,
+    EditMessageData,
 } from "./chat.type.js";
 import { ApiError, logger, normalizeObjectId } from "../../shared/index.js";
 import { FriendshipStatus } from "../friendship/friendship.model.js";
@@ -213,6 +214,15 @@ const markMessagesAsRead = async (
         currentUserId,
     );
 
+    if (updatedCount > 0) {
+        const room = `conversation:${conversationId}`;
+
+        io.to(room).emit("chat:message-read", {
+            conversationId,
+            readerId: currentUserId.toString(),
+        });
+    }
+
     return {
         read: true,
         updatedCount,
@@ -222,7 +232,7 @@ const markMessagesAsRead = async (
 const editMessage = async (
     data: MsgEditParamInput & MsgEditBodyInput,
     currentUserId: Types.ObjectId,
-): Promise<MessageData> => {
+): Promise<EditMessageData> => {
     const normalizedInput = {
         ...data,
         chatId: normalizeObjectId(data.chatId),
@@ -242,7 +252,7 @@ const editMessage = async (
         if (conversation) {
             for (const participantId of conversation.participants) {
                 io.to(`user:${participantId.toString()}`).emit("chat:message-edited", {
-                    chatId: editMsg._id,
+                    chatId: editMsg.id,
                     conversationId: editMsg.conversationId,
                     message: editMsg.message,
                     updatedAt: editMsg.updatedAt,
@@ -254,10 +264,11 @@ const editMessage = async (
     }
 
     return {
-        chatId: editMsg._id,
+        chatId: editMsg.id,
         conversationId: editMsg.conversationId,
         message: editMsg.message,
         createdAt: editMsg.createdAt,
+        updatedAt: editMsg.updatedAt,
     };
 };
 
@@ -282,26 +293,23 @@ const deleteMessage = async (
     }
 
     try {
-        const conversation = await conversationRepo.findConversationById(
-            deletedMsg.conversationId,
+        io.to(`conversation:${deletedMsg.conversationId}`).emit(
+            "chat:message-deleted",
+            {
+                chatId: deletedMsg.id,
+                conversationId: deletedMsg.conversationId,
+                message: deletedMsg.message,
+                isDeleted: true,
+            },
         );
-
-        if (conversation) {
-            for (const participantId of conversation.participants) {
-                io.to(`user:${participantId.toString()}`).emit("chat:message-deleted", {
-                    chatId: deletedMsg._id,
-                    conversationId: deletedMsg.conversationId,
-                });
-            }
-        }
     } catch (err) {
         logger.warn("[deleteMessage] Socket emit failed", { err });
     }
 
     return {
-        chatId: deletedMsg._id,
+        chatId: deletedMsg.id,
         conversationId: deletedMsg.conversationId,
-        message: "This message was deleted",
+        message: deletedMsg.message,
         createdAt: deletedMsg.createdAt,
         isDeleted: true,
     };

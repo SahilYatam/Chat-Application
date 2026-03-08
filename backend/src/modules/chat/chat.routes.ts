@@ -18,6 +18,11 @@ router.patch(
 );
 
 router.patch(
+    "/message-read/:conversationId",
+    chatController.markMessagesAsRead
+)
+
+router.patch(
     "/delete-message/:chatId/:conversationId",
     chatController.deleteMessage,
 );

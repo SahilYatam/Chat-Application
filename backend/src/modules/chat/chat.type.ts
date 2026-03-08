@@ -26,6 +26,14 @@ export type BaseMessageData = {
     createdAt: Date;
 }
 
+export type EditMessageData = {
+    chatId: Types.ObjectId;
+    conversationId: Types.ObjectId;
+    message: string;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
 export type GetMessagesResponse = {
   messages: ChatEntity[];
   nextCursor: Types.ObjectId | null;
