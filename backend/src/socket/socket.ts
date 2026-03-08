@@ -62,7 +62,25 @@ io.on("connection", (socket) => {
         room,
     });
 
+    // Join conversation room
+    socket.on("chat:join", (conversationId: string) => {
+        const room = `conversation:${conversationId}`;
+        socket.join(room);
+        
+        logger.info("💬 User joined conversation", {
+            socketId: socket.id,
+            conversationId,
+        });
+    })
+
+    // Leave conversation room
+    socket.on("chat:leave", (conversationId: string) => {
+        const room = `conversation:${conversationId}`;
+        socket.leave(room)
+    })
+
     socket.on("disconnect", (reason) => {
+        console.log("🔴 Disconnected because:", reason);
         logger.info("🔴 Socket disconnected", {
             socketId: socket.id,
             reason,
