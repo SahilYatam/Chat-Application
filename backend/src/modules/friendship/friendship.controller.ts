@@ -6,6 +6,7 @@ const getFriendList = asyncHandler(async (req: Request, res: Response) => {
     const currentUserId = req.user._id;
 
     const friendList = await friendshipService.getFriendList(currentUserId);
+    console.log("FriendList: ", friendList)
 
     return res
         .status(200)

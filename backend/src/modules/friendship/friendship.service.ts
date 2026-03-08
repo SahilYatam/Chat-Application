@@ -17,12 +17,12 @@ const getFriendList = async (currentUserId: Types.ObjectId) => {
     const users = await userRepo.findUsersByIds(uniqueFriendIds);
 
     return users.map((user) => ({
-        userId: user._id,
+        id: user._id.toString(),
         username: user.username,
         avatar: user.avatar,
     }));
 };
 
 export const friendshipService = {
-    getFriendList
-}
+    getFriendList,
+};
