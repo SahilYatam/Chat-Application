@@ -49,7 +49,7 @@ const NotificationItem: React.FC<Props> = ({
                     e.stopPropagation();
                     onDelete(notification.id)
                 }}
-                className="absolute top-2 right-2 text-gray-400 hover:text-red-400 transition"
+                className="absolute top-2 right-2 text-gray-400 hover:text-red-400 transition cursor-pointer"
             >
                 <X size={14}/>
             </button>
