@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { Friend, LoadingState } from "../../types";
-import { getFriendList } from "./friendship.thunks";
+import { friendshipThunk } from "./friendship.thunks";
 
 interface FriendshipState {
     friends: Friend[];
@@ -26,15 +26,15 @@ const friendshipSlice = createSlice({
 
     extraReducers: (builder) => {
         builder
-            .addCase(getFriendList.pending, (state) => {
+            .addCase(friendshipThunk.getFriendList.pending, (state) => {
                 state.status = "loading";
                 state.error = null;
             })
-            .addCase(getFriendList.fulfilled, (state, action) => {
+            .addCase(friendshipThunk.getFriendList.fulfilled, (state, action) => {
                 state.status = "succeeded";
                 state.friends = action.payload;
             })
-            .addCase(getFriendList.rejected, (state, action) => {
+            .addCase(friendshipThunk.getFriendList.rejected, (state, action) => {
                 state.status = "failed";
                 state.error = action.payload || "Something went wrong";
             });
