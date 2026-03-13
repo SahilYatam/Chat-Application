@@ -31,20 +31,30 @@ function RootLayout() {
 
         const socket = connectSocket(user.userId, accessToken);
 
-        socket.on("connect", () => {
+        const handleConnect = () => {
             console.log("🟢 SOCKET CONNECTED", socket.id);
             registerChatSocketEvents(socket);
             registerNotificationSocket(socket, dispatch);
             dispatch(setSocketReady());
-        });
+        };
 
-        socket.on("connect_error", (err) => {
-            console.log("🔴 SOCKET CONNECTION ERROR:", err.message);
-        });
-
-        socket.on("disconnect", (reason) => {
+        const handleDisconnect = (reason: string) => {
             console.log("🔴 SOCKET DISCONNECTED:", reason);
-        });
+        };
+
+        const handleError = (err: Error) => {
+            console.log("🔴 SOCKET CONNECTION ERROR:", err.message);
+        };
+
+        socket.on("connect", handleConnect);
+        socket.on("disconnect", handleDisconnect);
+        socket.on("connect_error", handleError);
+
+        return () => {
+            socket.off("connect", handleConnect);
+            socket.off("disconnect", handleDisconnect);
+            socket.off("connect_error", handleError);
+        };
     }, [user, accessToken, dispatch]);
 
     return <Outlet />;

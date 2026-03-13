@@ -9,7 +9,7 @@ import { useState } from "react";
 const Sidebar = () => {
     const [activeTab, setActiveTab] = useState<TabType>("global");
     return (
-        <div className="flex flex-col w-96 h-full border-r border-slate-700 bg-gray-900/40 backdrop-blur-md p-4">
+        <div className="flex flex-col w-96 h-full border-r border-slate-700 flex-shrink-0 bg-gray-900/40 backdrop-blur-md p-4">
             <SearchInput />
 
             <UserFilterTabs activeTab={activeTab} setActiveTab={setActiveTab} />

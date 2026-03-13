@@ -47,6 +47,7 @@ const Topbar = () => {
     const onNotificationClick = (notif: AppNotification) => {
         // Opstimistic update instantly and then sync with backend
         dispatch(markAsReadLocal(notif.id));
+        console.log("NotifcationId from topbar component: ", notif.id)
         dispatch(notificationThunks.markNotificationAsRead(notif.id));
         dispatch(
             notificationClicked({

@@ -191,7 +191,7 @@ const MessageContainer = () => {
 
     // 7️⃣ Friends → Chat
     return (
-        <div className="flex flex-col w-full">
+        <div className="flex flex-col flex-1 h-full overflow-hidden">
             <div className="bg-slate-500 px-4 py-2">
                 <span className="label-text">To:</span>{" "}
                 <span className="font-bold">{selectedUser?.username}</span>

@@ -30,8 +30,10 @@ const Message = ({
 
     const dispatch = useAppDispatch();
 
-    const currentUserId = useAppSelector((state) => state.user.user?.id);
-    const isSender = String(currentUserId) === String(senderId);
+    const authUser = useAppSelector((state) => state.user.user);
+    const isSender =  authUser?.id === senderId;
+    console.log("AuthUserId: ", authUser?.id)
+    console.log("SenderId: ", senderId)
 
     const handleSave = async () => {
         if (!editedMessage.trim()) return;
@@ -148,9 +150,9 @@ const Message = ({
 
                 {/* TIME */}
                 <span
-                    className={`text-xs mt-1 flex items-center gap-1 justify-end
+                    className={`text-xs mt-1 flex items-center gap-1 
                         ${isSender
-                            ? "text-right text-gray-300"
+                            ? "text-right text-gray-300 justify-end"
                             : "text-left text-gray-300 w-15"
                         }`}
                 >
