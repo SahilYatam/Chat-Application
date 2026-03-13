@@ -57,11 +57,12 @@ const searchUser = createAsyncThunk<
     { rejectValue: string }
 >("user/searchUser", async (username, { rejectWithValue }) => {
     try {
-        const res = await api.get<{ users: UserProfile[] }>("/user/search-user", {
+        const res = await api.get("/user/search-user", {
             params: { username },
         });
+        console.log("🔎 Searched User: ", res.data.data)
 
-        return res.data.users;
+        return res.data.data;
     } catch (error) {
         if (axios.isAxiosError(error)) {
             return rejectWithValue(

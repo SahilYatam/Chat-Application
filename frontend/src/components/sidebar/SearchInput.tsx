@@ -1,18 +1,32 @@
 import { IoSearchSharp } from "react-icons/io5";
 import { useState } from "react";
 import type { SubmitEvent } from "react";
+import { useAppDispatch } from "../../store/hooks";
+import { userThunks } from "../../features/user/userThunks";
 
 const SearchInput = () => {
     const [search, setSearch] = useState("");
+    const dispatch = useAppDispatch();
+
     const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
+        
+        if(search.trim() === ""){
+            dispatch(userThunks.getAllUserForSidePanel());
+            return;
+        }
 
         if (!search) return;
 
         if (search.length < 3) {
             return "Search term must be at least 3 characters long";
         }
+
+        dispatch(userThunks.searchUser(search));
+
+        setSearch("")
     };
+
     return (
         <form onSubmit={handleSubmit} className="flex items-center gap-2 w-full">
             <input
