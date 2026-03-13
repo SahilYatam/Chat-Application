@@ -30,8 +30,9 @@ const markNotificationAsRead = createAsyncThunk<
     { rejectValue: string }
 >("notfication/markAsRead", async (notificationId, { rejectWithValue }) => {
     try {
-        const res = await api.patch(`/notification/mark-as-read/${notificationId}`);
-        return res.data.data.markAsRead;
+        await api.patch(`/notification/mark-as-read/${notificationId}`);
+        console.log("notificationId: ", notificationId)
+        return notificationId;
     } catch (error) {
         if (axios.isAxiosError(error)) {
             return rejectWithValue(

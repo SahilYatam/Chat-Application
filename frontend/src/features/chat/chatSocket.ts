@@ -4,6 +4,14 @@ import { store } from "../../store/store";
 import { messageReceived, messageUpdated, messageDeleted, messageRead } from "./chatSlices";
 
 export const registerChatSocketEvents = (socket: Socket) => {
+
+    // Remove previous listeners, prevents duplicates after reconnect
+    socket.off("chat:message");
+    socket.off("chat:message-edited");
+    socket.off("chat:message-deleted");
+    socket.off("chat:message-read");
+
+
     socket.on("chat:message", (message) => {
         console.log("🔥 SOCKET MESSAGE RECEIVED:", message);
         store.dispatch(messageReceived(message));

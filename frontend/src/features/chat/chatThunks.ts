@@ -92,7 +92,7 @@ const markMessagesAsRead = createAsyncThunk<
     { read: boolean; updatedCount: number },
     { conversationId: string },
     { rejectValue: string }
->("chat/markMessagesAsRead", async (conversationId, { rejectWithValue }) => {
+>("chat/markMessagesAsRead", async ({conversationId}, { rejectWithValue }) => {
     try {
         const res = await api.patch(`/chat/message-read/${conversationId}`);
         return res.data.data;
