@@ -11,7 +11,6 @@ const myProfile = async (id: Types.ObjectId) => {
         id: user._id.toString(),
         username: user.username,
         name: user.name,
-        gender: user.gender,
         avatar: user.avatar,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
@@ -19,11 +18,17 @@ const myProfile = async (id: Types.ObjectId) => {
 };
 
 const searchUserByUsername = async (username: string) => {
-    const searchedUser = await userRepo.findUserByUsername(username);
+    const users = await userRepo.searchUsersByUsername(username);
 
-    if (!searchedUser) throw new ApiError(404, "User not found");
+    if (!users || users.length === 0) {
+        throw new ApiError(404, "User not found")
+    }
 
-    return searchedUser;
+    return users.map((user) => ({
+        id: user._id.toString(),
+        username: user.username,
+        avatar: user.avatar
+    }))
 };
 
 

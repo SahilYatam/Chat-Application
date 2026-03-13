@@ -57,13 +57,13 @@ const findUserByUsername = async (
     return User.findOne({ username }).lean<UserLean>().exec();
 };
 
-const searchUsersByUsername = async (username: string): Promise<UserLean[]> => {
+const searchUsersByUsername = async (username: string) => {
     return await User.find({
         username: { $regex: username, $options: "i" },
     })
-        .select({ username: 1, avatar: 1 })
-        .limit(20)
-        .lean<UserLean[]>();
+    .select({ username: 1, avatar: 1 })
+    .limit(20)
+    .lean();
 };
 
 const getAllUserForSidePanel = async (
