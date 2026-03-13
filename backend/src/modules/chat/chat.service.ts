@@ -13,6 +13,7 @@ import {
     GetMessagesInput,
     GetMessagesResponse,
     EditMessageData,
+    SendMessageData
 } from "./chat.type.js";
 import { ApiError, logger, normalizeObjectId } from "../../shared/index.js";
 import { FriendshipStatus } from "../friendship/friendship.model.js";
@@ -59,7 +60,7 @@ const resolveConversation = async (
 const sendMessage = async (
     senderId: Types.ObjectId,
     data: SendMsgInput,
-): Promise<MessageData> => {
+): Promise<SendMessageData> => {
     const userA = normalizeObjectId(senderId);
     const userB = normalizeObjectId(data.receiverId);
 
@@ -157,6 +158,7 @@ const sendMessage = async (
     return {
         chatId: chat._id,
         conversationId: chat.conversationId,
+        senderId: userA,
         message: chat.message,
         createdAt: chat.createdAt,
     };

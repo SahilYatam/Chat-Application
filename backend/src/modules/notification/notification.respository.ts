@@ -147,9 +147,13 @@ const getUserNotifications = async (
     };
 };
 
-const findById = async(id: Types.ObjectId): Promise<NotificationEntity | null> => {
-    return await Notification.findById(id).lean<NotificationEntity>()
-}
+const findById = async (id: Types.ObjectId): Promise<NotificationEntity | null> => {
+    const doc = await Notification.findById(id).lean();
+
+    if (!doc) return null;
+
+    return returnObj(doc);
+};
 
 const markAsRead = async (
     input: MarkAsReadInput

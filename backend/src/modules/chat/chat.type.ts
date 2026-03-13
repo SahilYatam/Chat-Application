@@ -26,6 +26,14 @@ export type BaseMessageData = {
     createdAt: Date;
 }
 
+export type SendMessageData = {
+    chatId: Types.ObjectId;
+    conversationId: Types.ObjectId;
+    senderId: Types.ObjectId;
+    message: string;
+    createdAt: Date;
+}
+
 export type EditMessageData = {
     chatId: Types.ObjectId;
     conversationId: Types.ObjectId;

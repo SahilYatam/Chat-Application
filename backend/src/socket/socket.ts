@@ -12,10 +12,14 @@ import { RealtimeNotificationPayload } from "./notification.socket.js";
 const server = http.createServer(app);
 
 const io = new Server(server, {
+    transports: ["websocket"],
     cors: {
         origin: process.env.CLIENT_URL,
         methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
+        credentials: true
     },
+    pingInterval: 25000,
+    pingTimeout: 60000,
 });
 
 // 🔥 QueueEvents is REQUIRED to read worker return values
