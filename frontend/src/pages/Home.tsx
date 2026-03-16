@@ -6,17 +6,8 @@ import { Navigate } from "react-router-dom";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 const Home = () => {
-    const { user, isAuthenticated, status } = useAppSelector(
+    const { isAuthenticated, status } = useAppSelector(
         (state) => state.auth,
-    );
-
-    console.log(
-        "🏠 Home render — user:",
-        user,
-        "isAuthenticated:",
-        isAuthenticated,
-        "status:",
-        status,
     );
 
     if (status === "loading") {

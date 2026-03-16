@@ -15,7 +15,7 @@ const signupUser = createAsyncThunk<
     { rejectValue: string }
 >("auth/signupUser", async (credentials, { rejectWithValue }) => {
     try {
-        const res = await api.post<{ data: AuthResponse }>("/auth/signup", credentials);
+        const res = await api.post("/auth/signup", credentials);
 
         return res.data.data;
     } catch (error) {
@@ -35,7 +35,7 @@ const loginUser = createAsyncThunk<
     { rejectValue: string }
 >("auth/loginUser", async (credentials, { rejectWithValue }) => {
     try {
-        const res = await api.post<{ data: AuthResponse }>("/auth/login", credentials);
+        const res = await api.post("/auth/login", credentials);
 
         return res.data.data;
     } catch (error) {

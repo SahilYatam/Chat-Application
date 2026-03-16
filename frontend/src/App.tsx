@@ -13,23 +13,22 @@ import { registerNotificationSocket } from "./socket/notification.socket";
 function RootLayout() {
     const dispatch = useAppDispatch();
     const {
-        user,
+        user: authUser,
         accessToken,
-        status: authStatus,
     } = useAppSelector((state) => state.auth);
 
     useEffect(() => {
-        if (authStatus === "idle") {
-            console.log("📥 Fetching user profile...");
+        if (!authUser && !accessToken) {
+            console.log("📥 Fetching user profile on page refresh...");
             dispatch(userThunks.getUserProfile());
         }
-    }, [authStatus, dispatch]);
+    }, []);
 
     // Socket setup
     useEffect(() => {
-        if (!user || !accessToken) return;
+        if (!authUser || !accessToken) return;
 
-        const socket = connectSocket(user.userId, accessToken);
+        const socket = connectSocket(authUser.id, accessToken);
 
         const handleConnect = () => {
             console.log("🟢 SOCKET CONNECTED", socket.id);
@@ -55,7 +54,7 @@ function RootLayout() {
             socket.off("disconnect", handleDisconnect);
             socket.off("connect_error", handleError);
         };
-    }, [user, accessToken, dispatch]);
+    }, [authUser, accessToken, dispatch]);
 
     return <Outlet />;
 }

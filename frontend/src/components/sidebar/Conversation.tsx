@@ -6,12 +6,10 @@ interface Prop {
 }
 
 const Conversation = ({avatar, username, selectUser, id}: Prop) => {
-     console.log("Conversation ID:", id);
 
 	return (
 		<>
 			<div className='flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors hover:bg-sky-500/20 min-w-0' onClick={() => {
-                console.log("Clicked ID:", id);
                 selectUser(id);
             }}>
 				
