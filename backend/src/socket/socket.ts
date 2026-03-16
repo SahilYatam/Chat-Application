@@ -16,7 +16,7 @@ const io = new Server(server, {
     cors: {
         origin: process.env.CLIENT_URL,
         methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
-        credentials: true
+        credentials: true,
     },
     pingInterval: 25000,
     pingTimeout: 60000,
@@ -28,7 +28,7 @@ const notificationQueueEvents = new QueueEvents(NOTIFICATION_DELIVERY_QUEUE, {
 });
 
 notificationQueueEvents.on("completed", ({ returnvalue }) => {
-    if(!returnvalue || typeof returnvalue !== "object"){
+    if (!returnvalue || typeof returnvalue !== "object") {
         return;
     }
 
@@ -70,18 +70,32 @@ io.on("connection", (socket) => {
     socket.on("chat:join", (conversationId: string) => {
         const room = `conversation:${conversationId}`;
         socket.join(room);
-        
+
         logger.info("💬 User joined conversation", {
             socketId: socket.id,
             conversationId,
         });
-    })
+    });
 
     // Leave conversation room
     socket.on("chat:leave", (conversationId: string) => {
         const room = `conversation:${conversationId}`;
-        socket.leave(room)
-    })
+        socket.leave(room);
+    });
+
+    // Typing events
+    socket.on("chat:typing", ({ conversationId }) => {
+        console.log("Typing received", conversationId, userId);
+        socket.to(`conversation:${conversationId}`).emit("chat:typing", {
+            userId,
+        });
+    });
+
+    socket.on("chat:stop-typing", ({ conversationId }) => {
+        socket.to(`conversation:${conversationId}`).emit("chat:stop-typing", {
+            userId,
+        });
+    });
 
     socket.on("disconnect", (reason) => {
         console.log("🔴 Disconnected because:", reason);
