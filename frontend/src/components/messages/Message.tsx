@@ -30,9 +30,9 @@ const Message = ({
 
     const dispatch = useAppDispatch();
 
-    const authUser = useAppSelector((state) => state.user.user);
-    const isSender =  authUser?.id === senderId;
-    console.log("AuthUserId: ", authUser?.id)
+    const authUser = useAppSelector((state) => state.auth.user?.id);
+    const isSender =  authUser === senderId;
+    console.log("AuthUserId: ", authUser)
     console.log("SenderId: ", senderId)
 
     const handleSave = async () => {

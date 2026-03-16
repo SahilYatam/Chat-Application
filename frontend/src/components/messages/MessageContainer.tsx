@@ -45,14 +45,7 @@ const MessageContainer = () => {
             : []
     )
 
-    const currentUserId = useAppSelector((state) => state.user.user?.id);
-    
-
-    // 🔍 DEBUG LOGS
-    console.log("🧠 selectedUserId:", selectedUserId);
-    console.log("🤝 friendshipStatus:", friendshipStatus);
-    console.log("⏳ isLoading:", isLoading);
-    console.log("🔔 activeEntity:", activeEntity);
+    const currentUserId = useAppSelector((state) => state.auth.user?.id);
 
     useEffect(() => {
         if (!selectedUserId) return;

@@ -1,11 +1,14 @@
 import { useAppSelector, useAppDispatch } from "../../store/hooks";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Message from "./Message";
 import { chatThunk } from "../../features/chat/chatThunks";
+import { getSocket } from "../../socket/socket";
 
 const Messages = () => {
     const previousHeightRef = useRef(0);
     const isFetchingOlderRef = useRef(false);
+
+    const [typingUserId, setTypingUserId] = useState<string | null>(null);
 
     const containerRef = useRef<HTMLDivElement>(null);
     const dispatch = useAppDispatch();
@@ -14,11 +17,15 @@ const Messages = () => {
         (state) => state.chat.activeConversationId,
     );
 
+    const currentUserId = useAppSelector((state) => state.auth.user?.id);
+
     const cursor = useAppSelector((state) =>
         activeConversationId
             ? state.chat.cursorByConversation[activeConversationId]
             : null,
     );
+
+    const socketReady = useAppSelector((state) => state.auth.socketReady);
 
     const messages = useAppSelector((state) => {
         if (!activeConversationId) return [];
@@ -49,23 +56,49 @@ const Messages = () => {
 
     useEffect(() => {
         const el = containerRef.current;
-        if(!el) return;
+        if (!el) return;
 
         // if loading older messages
-        if(isFetchingOlderRef.current){
+        if (isFetchingOlderRef.current) {
             const newHeight = el.scrollHeight;
             const heightDiff = newHeight - previousHeightRef.current;
 
-            el.scrollTop = heightDiff
+            el.scrollTop = heightDiff;
 
-            isFetchingOlderRef.current = false
+            isFetchingOlderRef.current = false;
         } else {
             // normal behaviour, scroll to bottom
             el.scrollTop = el.scrollHeight;
         }
-
-
     }, [messages]);
+
+    useEffect(() => {
+        const socket = getSocket();
+        if (!socket) return;
+
+        const timeout = setTimeout(() => setTypingUserId(null), 0);
+
+        const handleTyping = ({ userId }: { userId: string }) => {
+            console.log("Someone Typing: ", userId);
+
+            setTypingUserId(userId);
+        };
+
+        const handleStopTyping = () => {
+            console.log("Someone Stop Typing");
+            setTypingUserId(null);
+        };
+
+        socket.on("chat:typing", handleTyping);
+        socket.on("chat:stop-typing", handleStopTyping);
+
+        return () => {
+            clearTimeout(timeout);
+            socket.off("chat:typing", handleTyping);
+            socket.off("chat:stop-typing", handleStopTyping);
+        };
+    }, [socketReady, activeConversationId]);
+
 
     return (
         <div
@@ -86,6 +119,10 @@ const Messages = () => {
                         read={msg.read}
                     />
                 ))}
+
+            {typingUserId && typingUserId !== currentUserId && (
+                <div className="text-sm text-black font-bold italic px-2 pb-2">Typing...</div>
+            )}
         </div>
     );
 };
