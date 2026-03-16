@@ -10,7 +10,7 @@ const signup = asyncHandler(async (req: Request, res: Response) => {
     const user = await authService.singup(input);
 
     const { accessToken, refreshToken } = await sessionService.createSession({
-        userId: user.userId,
+        userId: user.id,
     });
     setCookies(res, accessToken, refreshToken);
 
@@ -24,7 +24,7 @@ const login = asyncHandler(async (req: Request, res: Response) => {
     const user = await authService.login(input);
 
     const { accessToken, refreshToken } = await sessionService.createSession({
-        userId: user.userId,
+        userId: user.id,
     });
     setCookies(res, accessToken, refreshToken);
 

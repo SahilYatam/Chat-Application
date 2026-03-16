@@ -13,7 +13,7 @@ export type CreateSessionInput = z.infer<typeof authSchema.createSessionSchema>;
 // ============== Return Types ==============
 
 export type UserPublicData = {
-    userId: string;
+    id: string;
     username: string,
     name: string,
     avatar: string

@@ -34,7 +34,7 @@ const singup = async (data: SignupInput): Promise<UserPublicData> => {
     });
 
     return {
-        userId: user._id.toString(),
+        id: user._id.toString(),
         username: user.username,
         name: user.name,
         avatar: user.avatar,
@@ -60,7 +60,7 @@ const login = async (data: LoginInput): Promise<UserPublicData> => {
     }
 
     return {
-        userId: user._id.toString(),
+        id: user._id.toString(),
         username: user.username,
         name: user.name,
         avatar: user.avatar,
