@@ -17,6 +17,8 @@ const MessageContainer = () => {
 
     const selectedUserId = useAppSelector(state => state.chat.selectedUserId);
 
+    const socketReady = useAppSelector((state) => state.auth.socketReady)
+
     const activeEntity = useAppSelector(state => state.notification.activeEntity);
 
     const selectedUser = useAppSelector(state =>
@@ -99,7 +101,7 @@ const MessageContainer = () => {
         return () => {
             socket.emit("chat:leave", activeConversationId)
         }
-    }, [activeConversationId])
+    }, [activeConversationId, socketReady])
 
     // 1️⃣ Notification has top priority
     if (activeEntity?.type === "FRIEND_REQUEST_RECEIVED") {
