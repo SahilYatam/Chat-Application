@@ -15,7 +15,6 @@ export const setCookies = (
         secure: isProduction,
         sameSite: isProduction ? "none" as const : "lax" as const,
         maxAge: ACCESS_TOKEN_MAX_AGE,
-        domain: "localhost", // ✅ add this
         path: "/",
     });
 
@@ -24,7 +23,6 @@ export const setCookies = (
         secure: isProduction,
         sameSite: isProduction ? "none" as const : "lax" as const,
         maxAge: REFRESH_TOKEN_MAX_AGE,
-        domain: "localhost", // ✅ add this
         path: "/",
     });
 }
