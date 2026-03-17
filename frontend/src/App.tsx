@@ -1,5 +1,5 @@
 import Home from "./pages/Home";
-import { connectSocket } from "./socket/socket";
+import { connectSocket, updateSocketToken } from "./socket/socket";
 import { useEffect } from "react";
 import { registerChatSocketEvents } from "./features/chat/chatSocket";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
@@ -12,10 +12,7 @@ import { registerNotificationSocket } from "./socket/notification.socket";
 
 function RootLayout() {
     const dispatch = useAppDispatch();
-    const {
-        user: authUser,
-        accessToken,
-    } = useAppSelector((state) => state.auth);
+    const { user: authUser, accessToken } = useAppSelector((state) => state.auth);
 
     useEffect(() => {
         if (!authUser && !accessToken) {
@@ -48,12 +45,12 @@ function RootLayout() {
         socket.on("connect", handleConnect);
         socket.on("disconnect", handleDisconnect);
         socket.on("connect_error", handleError);
-        socket.io.on("reconnect",() => {
+        socket.io.on("reconnect", () => {
             console.log("🔄 SOCKET RECONNECTED");
             registerChatSocketEvents(socket);
             registerNotificationSocket(socket, dispatch);
             dispatch(setSocketReady());
-        })
+        });
 
         return () => {
             socket.off("connect", handleConnect);
@@ -62,6 +59,11 @@ function RootLayout() {
             socket.off("reconnect");
         };
     }, [authUser, accessToken, dispatch]);
+
+    useEffect(() => {
+        if (!accessToken) return;
+        updateSocketToken(accessToken);
+    }, [accessToken]);
 
     return <Outlet />;
 }

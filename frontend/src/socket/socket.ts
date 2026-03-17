@@ -4,7 +4,13 @@ let socket: Socket | null = null;
 const SOCKET_URL = "https://chat-application-backend-latest-xs6u.onrender.com"
 
 export const connectSocket = (userId: string, token: string) => {
-    if (socket) return socket;
+    if (socket?.connected) return socket;
+
+    if(socket){
+        socket.removeAllListeners();
+        socket.disconnect();
+        socket = null
+    }
 
     socket = io(SOCKET_URL, {
         auth: { token },
@@ -21,9 +27,15 @@ export const connectSocket = (userId: string, token: string) => {
     return socket;
 };
 
+export const updateSocketToken = (newToken: string) => {
+    if(!socket) return;
+    socket.auth = {token: newToken}
+}
+
 export const getSocket = (): Socket | null => socket;
 
 export const disconnectSocket = () => {
+    socket?.removeAllListeners();
     socket?.disconnect();
     socket = null;
 };
