@@ -14,7 +14,7 @@ interface QueueItem {
 
 // Main api instance
 const api: AxiosInstance = axios.create({
-    baseURL: "http://localhost:8000/api/v1",
+    baseURL: "https://chat-application-backend-latest-xs6u.onrender.com/api/v1",
     withCredentials: true,
     timeout: 10000,
     headers: {
@@ -24,7 +24,7 @@ const api: AxiosInstance = axios.create({
 
 // Separate instance only for refreshing
 const refreshApi: AxiosInstance = axios.create({
-    baseURL: "http://localhost:8000/api/v1",
+    baseURL: "https://chat-application-backend-latest-xs6u.onrender.com/api/v1",
     withCredentials: true,
     timeout: 10000,
     headers: {

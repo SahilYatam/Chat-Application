@@ -1,11 +1,12 @@
 import { io, Socket } from "socket.io-client";
 
 let socket: Socket | null = null;
+const SOCKET_URL = "https://chat-application-backend-latest-xs6u.onrender.com"
 
 export const connectSocket = (userId: string, token: string) => {
     if (socket) return socket;
 
-    socket = io(import.meta.env.VITE_SOCKET_URL, {
+    socket = io(SOCKET_URL, {
         auth: { token },
         query: { userId },
         withCredentials: true,
