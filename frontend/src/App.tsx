@@ -45,14 +45,23 @@ function RootLayout() {
             console.log("🔴 SOCKET CONNECTION ERROR:", err.message);
         };
 
+        const handleReconnect = () => {
+            console.log("🔄 SOCKET RECONNECTED");
+            registerChatSocketEvents(socket);
+            registerNotificationSocket(socket, dispatch);
+            dispatch(setSocketReady());
+        };
+
         socket.on("connect", handleConnect);
         socket.on("disconnect", handleDisconnect);
         socket.on("connect_error", handleError);
+        socket.on("reconnect", handleReconnect);
 
         return () => {
             socket.off("connect", handleConnect);
             socket.off("disconnect", handleDisconnect);
             socket.off("connect_error", handleError);
+            socket.off("reconnect", handleReconnect);
         };
     }, [authUser, accessToken, dispatch]);
 
