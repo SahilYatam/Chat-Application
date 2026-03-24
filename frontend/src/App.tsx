@@ -1,6 +1,6 @@
 import Home from "./pages/Home";
 import { connectSocket, updateSocketToken } from "./socket/socket";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { registerChatSocketEvents } from "./features/chat/chatSocket";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { RouterProvider, createBrowserRouter, Outlet } from "react-router-dom";
@@ -9,26 +9,30 @@ import { SignupPage } from "./pages/Signup";
 import { setSocketReady } from "./features/auth/authSlices";
 import { userThunks } from "./features/user/userThunks";
 import { registerNotificationSocket } from "./socket/notification.socket";
+import { Loader2Icon } from "lucide-react"
 
 function RootLayout() {
     const dispatch = useAppDispatch();
     const { user: authUser, accessToken } = useAppSelector((state) => state.auth);
 
+    const [authInitialized, setAuthInitialized] = useState(!!(authUser || accessToken));
+
     useEffect(() => {
-        if (!authUser && !accessToken) {
-            console.log("📥 Fetching user profile on page refresh...");
-            dispatch(userThunks.getUserProfile());
-        }
+        if (authInitialized) return;
+
+        dispatch(userThunks.getUserProfile()).finally(() => {
+            setAuthInitialized(true)
+        })
+
     }, []);
 
     // Socket setup
     useEffect(() => {
-        if (!authUser || !accessToken) return;
+        if (!authInitialized || !authUser || !accessToken) return;
 
         const socket = connectSocket(authUser.id, accessToken);
 
         const handleConnect = () => {
-            console.log("🟢 SOCKET CONNECTED", socket.id);
             registerChatSocketEvents(socket);
             registerNotificationSocket(socket, dispatch);
             dispatch(setSocketReady());
@@ -46,7 +50,6 @@ function RootLayout() {
         socket.on("disconnect", handleDisconnect);
         socket.on("connect_error", handleError);
         socket.io.on("reconnect", () => {
-            console.log("🔄 SOCKET RECONNECTED");
             registerChatSocketEvents(socket);
             registerNotificationSocket(socket, dispatch);
             dispatch(setSocketReady());
@@ -64,6 +67,10 @@ function RootLayout() {
         if (!accessToken) return;
         updateSocketToken(accessToken);
     }, [accessToken]);
+
+    if (!authInitialized) {
+        return <Loader2Icon size={30} />
+    }
 
     return <Outlet />;
 }

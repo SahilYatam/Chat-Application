@@ -28,10 +28,6 @@ export const LoginPage = () => {
         return () => clearTimeout(timer);
     }, [error, dispatch]);
 
-    if(status === "loading"){
-        return null
-    }
-
     if (isAuthenticated && user) {
         return <Navigate to="/" replace />;
     }
