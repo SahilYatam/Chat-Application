@@ -7,16 +7,11 @@ import { useEffect } from "react";
 import type { LoginCredentials } from "../types";
 
 export const LoginPage = () => {
-     console.log("🔑 LOGIN PAGE RENDERED");
-    // const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
     const { user, error, isAuthenticated, status } = useAppSelector(
         (state) => state.auth,
-    );
-
-    console.log("🔑 Login render — user:", user, "isAuthenticated:", isAuthenticated, "status:", status);
-
+    )
 
     useEffect(() => {
         if (!error) return;
@@ -43,7 +38,7 @@ export const LoginPage = () => {
                     Welcome Back 👋
                 </h1>
 
-                <LoginForm onSubmit={handleLogin} loading={false} />
+                <LoginForm onSubmit={handleLogin} loading={status === "loading"} />
 
                 <p className="text-sm text-white text-center mt-6">
                     Don’t have an account?{" "}

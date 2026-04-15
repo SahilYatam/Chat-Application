@@ -11,7 +11,11 @@ const Home = () => {
     );
 
     if (status === "loading") {
-        return <AiOutlineLoading3Quarters />;
+        return (
+            <div className="flex items-center justify-center h-full">
+                <AiOutlineLoading3Quarters className="animate-spin text-2xl text-white" />
+            </div>
+        );
     }
 
     if (!isAuthenticated) {
