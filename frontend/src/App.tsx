@@ -9,7 +9,7 @@ import { SignupPage } from "./pages/Signup";
 import { setSocketReady } from "./features/auth/authSlices";
 import { userThunks } from "./features/user/userThunks";
 import { registerNotificationSocket } from "./socket/notification.socket";
-import { Loader2Icon } from "lucide-react"
+import { LoaderCircleIcon } from "lucide-react"
 
 function RootLayout() {
     const dispatch = useAppDispatch();
@@ -69,7 +69,11 @@ function RootLayout() {
     }, [accessToken]);
 
     if (!authInitialized) {
-        return <Loader2Icon size={30} />
+        return(
+            <div className="flex justify-center items-center mt-70">
+                <LoaderCircleIcon size={30}/>
+            </div>
+        )
     }
 
     return <Outlet />;
