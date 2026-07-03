@@ -12,8 +12,8 @@ const Home = () => {
 
     if (status === "loading") {
         return (
-            <div className="flex items-center justify-center h-full">
-                <AiOutlineLoading3Quarters className="animate-spin text-2xl text-white" />
+            <div className="flex items-center justify-center min-h-screen">
+                <AiOutlineLoading3Quarters className="animate-spin text-2xl text-blue-500" />
             </div>
         );
     }
